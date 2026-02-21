@@ -1,0 +1,12 @@
+{
+  "name": "python-doctor",
+  "description": "Run python-doctor to check Python codebase health. One command, one score, actionable fixes.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Saikat Kumar Dey"
+  },
+  "homepage": "https://github.com/saikatkumardey/python-doctor",
+  "repository": "https://github.com/saikatkumardey/python-doctor",
+  "license": "MIT",
+  "keywords": ["python", "health-check", "linting", "security", "code-quality"]
+}
