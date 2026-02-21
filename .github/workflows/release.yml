@@ -19,7 +19,7 @@ jobs:
             artifact_name: python-doctor-linux-x86_64
           - os: macos-latest
             artifact_name: python-doctor-macos-arm64
-          - os: macos-13
+          - os: macos-12
             artifact_name: python-doctor-macos-x86_64
           - os: windows-latest
             artifact_name: python-doctor-win-x86_64
