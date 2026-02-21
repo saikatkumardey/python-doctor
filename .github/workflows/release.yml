@@ -19,6 +19,8 @@ jobs:
             artifact_name: python-doctor-linux-x86_64
           - os: macos-latest
             artifact_name: python-doctor-macos-arm64
+          - os: macos-13
+            artifact_name: python-doctor-macos-x86_64
           - os: windows-latest
             artifact_name: python-doctor-win-x86_64
 
@@ -57,18 +59,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/python-doctor-linux-x86_64
-            artifacts/python-doctor-macos-arm64
-            artifacts/python-doctor-win-x86_64.exe
+            artifacts/python-doctor-linux-x86_64*
+            artifacts/python-doctor-macos-arm64*
+            artifacts/python-doctor-win-x86_64*
             install.sh
           generate_release_notes: true
 
