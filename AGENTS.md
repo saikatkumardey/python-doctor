@@ -10,7 +10,7 @@ python-doctor is a CLI tool that scans Python codebases and returns a 0-100 heal
 
 ### Installation
 ```bash
-pip install -e ".[dev]"  # Install with dev dependencies
+uv sync --extra dev  # Install with dev dependencies
 ```
 
 ### Linting
