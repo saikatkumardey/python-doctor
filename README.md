@@ -180,11 +180,11 @@ Score = `max(0, 100 - total_deductions)`. Each category is capped at its max.
 
 | Project | Stars | Score | Profile | Top Findings |
 |---------|-------|-------|---------|-------------|
-| [requests](https://github.com/psf/requests) | 52k+ | **85/100** (Good) | library | Large files, no type hints |
-| [flask](https://github.com/pallets/flask) | 69k+ | **82/100** (Good) | web | Large files, bare except, low type hint coverage |
-| [fastapi](https://github.com/tiangolo/fastapi) | 82k+ | **75/100** (Good) | web | Large files (routing.py: 4956 lines), 6% docstring coverage |
+| [requests](https://github.com/psf/requests) | 52k+ | **27/100** (Critical) | library | Security (B113 no-timeout in tests, B324 weak hashes), complexity (CC 21), large files, no type hints |
+| [flask](https://github.com/pallets/flask) | 69k+ | **47/100** (Critical) | web | Security (hardcoded passwords, debug=True), complexity (CC 27), large files (app.py: 1625 lines), bare except |
+| [fastapi](https://github.com/tiangolo/fastapi) | 82k+ | **26/100** (Critical) | web | Security (hundreds of B101 asserts in docs_src/), large files (routing.py: 4956 lines), 6% docstring coverage |
 
-Scores reflect structure, docs, imports, and exceptions analysis. Security, lint, dead code, and complexity checks timed out on larger projects (120s limit) — real-world scores may be lower.
+These are strict, opinionated scores. All analyzers ran to completion (10-min timeout). Most deductions come from test/example files triggering security rules — a good signal that python-doctor should weight those contexts differently in future versions.
 
 ## The Loop
 
