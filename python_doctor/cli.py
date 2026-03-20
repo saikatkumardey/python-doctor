@@ -1,11 +1,14 @@
 """Main CLI entry point for Python Doctor."""
 
 import argparse
+import fnmatch
 import json
 import os
 import sys
 
 from . import __version__
+from .config import Config, load_config
+from .profile import detect_profile, profile_for_kind
 from .analyzers import (
     bandit_analyzer,
     complexity,
@@ -35,14 +38,53 @@ ANALYZERS = [
 MAX_FINDINGS_DISPLAY = 5
 
 
-def run_analyzers(path: str, fix: bool = False):
+def run_analyzers(path: str, fix: bool = False, profile_name: str | None = None):
     """Run all analyzers on the given path and return results."""
+    config = load_config(path)
+
+    # Determine profile: CLI flag > config file > auto-detect
+    if profile_name:
+        profile = profile_for_kind(profile_name)
+    elif config.profile_override:
+        profile = profile_for_kind(config.profile_override)
+    else:
+        profile = detect_profile(path)
+
+    # Merge overrides (config wins over profile defaults)
+    merged_max_deduction = {**profile.max_deduction_overrides, **config.max_deduction_overrides}
+    merged_suppressed = profile.suppressed_rules | config.suppress_rules
+
     results = []
     for cat_name, mod in ANALYZERS:
         kwargs = {"path": path}
         if cat_name == "lint":
             kwargs["fix"] = fix
+        if cat_name in merged_max_deduction:
+            kwargs["max_deduction"] = merged_max_deduction[cat_name]
         result = mod.analyze(**kwargs)
+
+        # Filter findings matching suppressed rules (global and per-file)
+        original_findings = result.findings
+        if merged_suppressed or config.per_file_suppress:
+            result.findings = [
+                f for f in original_findings
+                if not (
+                    (merged_suppressed and f.rule in merged_suppressed)
+                    or (
+                        f.file
+                        and config.per_file_suppress
+                        and any(
+                            fnmatch.fnmatch(os.path.relpath(f.file, path), pat)
+                            and f.rule in rules
+                            for pat, rules in config.per_file_suppress.items()
+                        )
+                    )
+                )
+            ]
+            if len(result.findings) != len(original_findings):
+                max_ded = kwargs.get("max_deduction", CATEGORIES[cat_name]["max_deduction"])
+                result.deduction = min(sum(f.cost for f in result.findings), max_ded)
+
         results.append(result)
     return results
 
@@ -102,6 +144,12 @@ def main():
     parser.add_argument("--score", action="store_true", help="Output only the score number")
     parser.add_argument("--json", dest="json_out", action="store_true", help="JSON output")
     parser.add_argument("--fix", action="store_true", help="Auto-fix what's possible (ruff --fix)")
+    parser.add_argument(
+        "--profile",
+        choices=["cli", "web", "library", "script"],
+        default=None,
+        help="Override auto-detected project profile",
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     args = parser.parse_args()
@@ -111,7 +159,7 @@ def main():
         print(f"Error: '{path}' is not a directory.", file=sys.stderr)
         sys.exit(1)
 
-    results = run_analyzers(path, fix=args.fix)
+    results = run_analyzers(path, fix=args.fix, profile_name=args.profile)
     score = compute_score(results)
 
     if args.score:

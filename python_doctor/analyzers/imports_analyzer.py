@@ -94,7 +94,7 @@ def _detect_circular_imports(imports_graph: dict[str, set[str]], result: Analyze
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Analyze import hygiene: star imports and circular dependencies."""
     result = AnalyzerResult(category="imports")
-    max_ded = CATEGORIES["imports"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["imports"]["max_deduction"])
 
     py_files = _collect_py_files(path)
     imports_graph = _build_import_graph(py_files, path, result)

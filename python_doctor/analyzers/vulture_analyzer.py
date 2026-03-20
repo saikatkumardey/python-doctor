@@ -1,17 +1,24 @@
 """Vulture dead code analyzer."""
 
+import os
 import re
 import shutil
 import subprocess  # nosec B404 — required for running CLI tools
 import sys
 
 from ..rules import CATEGORIES, VULTURE_COST, AnalyzerResult, Finding
+from ._util import is_test_file
+
+
+# Pattern to detect underscore-prefixed names in vulture messages
+_UNUSED_UNDERSCORE = re.compile(r"unused \w+ '(_[^']*)'")
+
 
 
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Analyze dead code using vulture."""
     result = AnalyzerResult(category="dead_code")
-    max_ded = CATEGORIES["dead_code"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["dead_code"]["max_deduction"])
 
     if shutil.which("vulture"):
         cmd = ["vulture", "--min-confidence", "80",
@@ -35,6 +42,13 @@ def analyze(path: str, **_kw) -> AnalyzerResult:
         m = pat.match(line)
         if m:
             filename, lineno, msg = m.group(1), int(m.group(2)), m.group(3)
+            # Skip findings from test files
+            if is_test_file(filename):
+                continue
+            # Skip unused variables/functions/etc prefixed with _
+            um = _UNUSED_UNDERSCORE.search(msg)
+            if um:
+                continue
             result.findings.append(Finding(
                 category="dead_code", rule="vulture", message=msg,
                 file=filename, line=lineno, cost=VULTURE_COST,

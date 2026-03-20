@@ -1,5 +1,6 @@
 """Bandit security analyzer."""
 
+import ast
 import json
 import os
 import shutil
@@ -7,25 +8,41 @@ import subprocess  # nosec B404 — required for running CLI tools
 import sys
 
 from ..rules import BANDIT_SEVERITY_COST, CATEGORIES, AnalyzerResult, Finding
+from ._util import SKIP_DIRS, is_test_file
 
-_EXCLUDE_DIRS = [".venv", "venv", "node_modules", "__pycache__", ".git", ".tox", ".mypy_cache", ".ruff_cache"]
 
+def _is_literal_subprocess(finding: dict) -> bool:
+    """Return True if the subprocess call uses only string literal arguments."""
+    code = finding.get("code", "")
+    try:
+        tree = ast.parse(code.strip())
+    except SyntaxError:
+        return False
 
-def _is_test_file(filepath: str) -> bool:
-    """Check if a file is a test file (in test dir or test-named)."""
-    parts = os.path.normpath(filepath).split(os.sep)
-    if any(p in ("tests", "test") for p in parts):
-        return True
-    basename = os.path.basename(filepath)
-    return basename.startswith("test_") or basename.endswith("_test.py")
+    def _is_str_literal(node: ast.expr) -> bool:
+        """Check if a node is a string constant or a list of string constants."""
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return True
+        if isinstance(node, ast.List):
+            return all(
+                isinstance(elt, ast.Constant) and isinstance(elt.value, str)
+                for elt in node.elts
+            )
+        return False
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            if all(_is_str_literal(arg) for arg in node.args):
+                return True
+    return False
 
 
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Run bandit security analysis on the project."""
     result = AnalyzerResult(category="security")
-    max_ded = CATEGORIES["security"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["security"]["max_deduction"])
     abs_path = os.path.abspath(path)
-    excludes = ",".join(os.path.join(abs_path, d) for d in _EXCLUDE_DIRS)
+    excludes = ",".join(os.path.join(abs_path, d) for d in SKIP_DIRS)
 
     if shutil.which("bandit"):
         cmd = ["bandit", "-r", "-f", "json", "-q", "--exclude", excludes, abs_path]
@@ -51,7 +68,11 @@ def analyze(path: str, **_kw) -> AnalyzerResult:
         line = item.get("line_number", 0)
 
         # Skip B101 (assert) in test files
-        if test_id == "B101" and _is_test_file(filename):
+        if test_id == "B101" and is_test_file(filename):
+            continue
+
+        # Skip B603/B607 when subprocess uses only string literal arguments
+        if test_id in ("B603", "B607") and _is_literal_subprocess(item):
             continue
 
         result.findings.append(Finding(

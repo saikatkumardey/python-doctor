@@ -78,7 +78,7 @@ def _check_vulnerabilities(path: str, result: AnalyzerResult) -> None:
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Analyze dependency hygiene: build files, mixed systems, and vulnerabilities."""
     result = AnalyzerResult(category="dependencies")
-    max_ded = CATEGORIES["dependencies"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["dependencies"]["max_deduction"])
 
     _check_build_system(path, result)
     _check_vulnerabilities(path, result)

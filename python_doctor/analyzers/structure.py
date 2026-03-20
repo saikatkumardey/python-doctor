@@ -21,8 +21,7 @@ from ..rules import (
     AnalyzerResult,
     Finding,
 )
-
-_SKIP_DIRS = {"__pycache__", ".git", "node_modules", ".venv", "venv", ".tox", ".mypy_cache", ".ruff_cache"}
+from ._util import SKIP_DIRS, is_test_file
 
 
 def _count_lines(filepath: str) -> int:
@@ -68,15 +67,6 @@ def _has_type_hints(filepath: str) -> bool:
     return False
 
 
-def _is_test_file(filepath: str) -> bool:
-    """Check if a file is a test file."""
-    parts = os.path.normpath(filepath).split(os.sep)
-    if any(p in ("tests", "test") for p in parts):
-        return True
-    basename = os.path.basename(filepath)
-    return basename.startswith("test_") or basename.endswith("_test.py")
-
-
 def _collect_py_files(path: str) -> tuple[list[str], list[str], list[str], bool]:
     """Walk the project and classify Python files into source and test files."""
     py_files = []
@@ -84,14 +74,14 @@ def _collect_py_files(path: str) -> tuple[list[str], list[str], list[str], bool]
     source_files = []
     has_tests = False
     for root, dirs, files in os.walk(path):
-        dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         if any(d in ("tests", "test") for d in dirs):
             has_tests = True
         for f in files:
             if f.endswith(".py"):
                 fp = os.path.join(root, f)
                 py_files.append(fp)
-                if _is_test_file(fp):
+                if is_test_file(fp):
                     has_tests = True
                     test_files.append(fp)
                 else:
@@ -232,7 +222,7 @@ def _check_py_typed(path: str, uses_type_hints: bool, result: AnalyzerResult) ->
     if not uses_type_hints:
         return
     for root, dirs, files in os.walk(path):
-        dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         if "py.typed" in files:
             return
     result.findings.append(Finding(
@@ -254,13 +244,13 @@ def _check_project_health(path: str, result: AnalyzerResult, uses_type_hints: bo
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Analyze project structure: file sizes, tests, type hints, and project health."""
     result = AnalyzerResult(category="structure")
-    max_ded = CATEGORIES["structure"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["structure"]["max_deduction"])
 
     py_files, test_files, source_files, has_tests = _collect_py_files(path)
     if not py_files:
         return result
 
-    _check_large_files(py_files, result)
+    _check_large_files(source_files, result)
     _check_tests(has_tests, test_files, source_files, result)
     uses_type_hints = _check_type_hints(py_files, result)
     _check_project_health(path, result, uses_type_hints)

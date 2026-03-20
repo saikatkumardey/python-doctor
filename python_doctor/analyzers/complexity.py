@@ -11,7 +11,7 @@ from ..rules import CATEGORIES, AnalyzerResult, Finding
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Analyze cyclomatic complexity using radon."""
     result = AnalyzerResult(category="complexity")
-    max_ded = CATEGORIES["complexity"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["complexity"]["max_deduction"])
 
     if shutil.which("radon"):
         cmd = ["radon", "cc", "-j", "-n", "C",

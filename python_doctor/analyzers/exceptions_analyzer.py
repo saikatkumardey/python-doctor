@@ -4,17 +4,7 @@ import ast
 import os
 
 from ..rules import BARE_EXCEPT_COST, CATEGORIES, SILENT_EXCEPTION_COST, AnalyzerResult, Finding
-
-_SKIP_DIRS = {"__pycache__", ".git", "node_modules", ".venv", "venv", ".tox", ".mypy_cache", ".ruff_cache"}
-
-
-def _is_test_file(filepath: str) -> bool:
-    """Check if a file is a test file."""
-    parts = os.path.normpath(filepath).split(os.sep)
-    if any(p in ("tests", "test") for p in parts):
-        return True
-    basename = os.path.basename(filepath)
-    return basename.startswith("test_") or basename.endswith("_test.py")
+from ._util import SKIP_DIRS, is_test_file
 
 
 def _check_bare_except(node: ast.ExceptHandler, fp: str, result: AnalyzerResult) -> None:
@@ -38,6 +28,51 @@ def _check_silent_swallow(node: ast.ExceptHandler, fp: str, result: AnalyzerResu
         ))
 
 
+def _is_pass_or_continue(handler: ast.ExceptHandler) -> bool:
+    """Check if an except handler body is just ``pass`` or ``continue``."""
+    return (
+        len(handler.body) == 1
+        and isinstance(handler.body[0], (ast.Pass, ast.Continue))
+    )
+
+
+def _find_fallback_chains(tree: ast.Module) -> set[int]:
+    """Return handler line numbers that belong to fallback chains.
+
+    A fallback chain is two or more consecutive ``try`` nodes in the same
+    block where every handler body is just ``pass`` or ``continue``.  These
+    represent intentional "try method A, then method B" patterns and should
+    not be flagged.
+    """
+    suppressed: set[int] = set()
+
+    for node in ast.walk(tree):
+        body = getattr(node, "body", None)
+        if not isinstance(body, list):
+            continue
+
+        # Scan for runs of consecutive Try nodes whose handlers are all
+        # pass/continue.
+        run: list[ast.Try] = []
+        for stmt in body:
+            is_try = isinstance(stmt, ast.Try)
+            if is_try and all(_is_pass_or_continue(h) for h in stmt.handlers):
+                run.append(stmt)
+            else:
+                if len(run) >= 2:
+                    for try_node in run:
+                        for handler in try_node.handlers:
+                            suppressed.add(handler.lineno)
+                run = []
+        # Flush any remaining run at the end of the body.
+        if len(run) >= 2:
+            for try_node in run:
+                for handler in try_node.handlers:
+                    suppressed.add(handler.lineno)
+
+    return suppressed
+
+
 def _check_file(fp: str, result: AnalyzerResult) -> None:
     """Analyze exception handlers in a single file."""
     try:
@@ -46,8 +81,12 @@ def _check_file(fp: str, result: AnalyzerResult) -> None:
     except (SyntaxError, OSError):
         return
 
+    suppressed = _find_fallback_chains(tree)
+
     for node in ast.walk(tree):
         if not isinstance(node, ast.ExceptHandler):
+            continue
+        if node.lineno in suppressed:
             continue
         _check_bare_except(node, fp, result)
         _check_silent_swallow(node, fp, result)
@@ -56,15 +95,15 @@ def _check_file(fp: str, result: AnalyzerResult) -> None:
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Analyze exception handling patterns across the project."""
     result = AnalyzerResult(category="exceptions")
-    max_ded = CATEGORIES["exceptions"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["exceptions"]["max_deduction"])
 
     for root, dirs, files in os.walk(path):
-        dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for f in files:
             if not f.endswith(".py"):
                 continue
             fp = os.path.join(root, f)
-            if _is_test_file(fp):
+            if is_test_file(fp):
                 continue
             _check_file(fp, result)
 

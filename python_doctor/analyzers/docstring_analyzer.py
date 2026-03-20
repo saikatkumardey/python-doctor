@@ -4,17 +4,7 @@ import ast
 import os
 
 from ..rules import CATEGORIES, AnalyzerResult, Finding
-
-_SKIP_DIRS = {"__pycache__", ".git", "node_modules", ".venv", "venv", ".tox", ".mypy_cache", ".ruff_cache"}
-
-
-def _is_test_file(filepath: str) -> bool:
-    """Check if a file is a test file."""
-    parts = os.path.normpath(filepath).split(os.sep)
-    if any(p in ("tests", "test") for p in parts):
-        return True
-    basename = os.path.basename(filepath)
-    return basename.startswith("test_") or basename.endswith("_test.py")
+from ._util import SKIP_DIRS, is_test_file
 
 
 def _check_file(filepath: str) -> tuple[int, int]:
@@ -44,12 +34,12 @@ def _collect_coverage(path: str) -> tuple[int, int]:
     total_public = 0
     total_documented = 0
     for root, dirs, files in os.walk(path):
-        dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for f in files:
             if not f.endswith(".py"):
                 continue
             fp = os.path.join(root, f)
-            if _is_test_file(fp):
+            if is_test_file(fp):
                 continue
             if f == "__init__.py" and os.path.getsize(fp) < 10:
                 continue
@@ -72,7 +62,7 @@ def _compute_deduction(ratio: float) -> tuple[int, int]:
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Analyze docstring coverage for public functions and classes."""
     result = AnalyzerResult(category="docs")
-    max_ded = CATEGORIES["docs"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["docs"]["max_deduction"])
 
     total_public, total_documented = _collect_coverage(path)
     if total_public == 0:

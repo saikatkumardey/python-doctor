@@ -8,10 +8,10 @@ import sys
 from ..rules import CATEGORIES, RUFF_ERROR_COST, RUFF_WARNING_COST, AnalyzerResult, Finding
 
 
-def analyze(path: str, fix: bool = False) -> AnalyzerResult:
+def analyze(path: str, fix: bool = False, **_kw) -> AnalyzerResult:
     """Run ruff linting analysis, optionally auto-fixing issues."""
     result = AnalyzerResult(category="lint")
-    max_ded = CATEGORIES["lint"]["max_deduction"]
+    max_ded = _kw.get("max_deduction", CATEGORIES["lint"]["max_deduction"])
 
     if shutil.which("ruff"):
         cmd = ["ruff", "check"]
