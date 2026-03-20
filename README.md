@@ -157,6 +157,17 @@ python-doctor . --fix
 
 Score = `max(0, 100 - total_deductions)`. Each category is capped at its max.
 
+## Scores on Popular Projects
+
+| Project | Stars | Score | Profile | Top Findings |
+|---------|-------|-------|---------|-------------|
+| [requests](https://github.com/psf/requests) | 52k+ | **85/100** (Good) | library | Large files, no type hints |
+| [flask](https://github.com/pallets/flask) | 69k+ | **82/100** (Good) | web | Large files, bare except, low type hint coverage |
+| [fastapi](https://github.com/tiangolo/fastapi) | 82k+ | **75/100** (Good) | web | Large files (routing.py: 4956 lines), 6% docstring coverage |
+| [smolclaw](https://github.com/saikatkumardey/smolclaw) | — | **44/100** (Critical) | cli | High complexity, silent exceptions, low docstring coverage |
+
+Scores reflect structure, docs, imports, and exceptions analysis. Security, lint, dead code, and complexity checks timed out on larger projects (120s limit) — real-world scores may be lower.
+
 ## The Loop
 
 This is how an agent uses it:
