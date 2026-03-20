@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Doctor — One command. One score.</title>
+<meta name="description" content="Scan any Python codebase and get a 0-100 health score. Built for AI agents. 9 categories, one command.">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --text: #e4e4ef;
+    --muted: #8888a0;
+    --accent: #22c55e;
+    --accent-dim: #16a34a;
+    --accent-glow: rgba(34, 197, 94, 0.15);
+    --red: #ef4444;
+    --yellow: #eab308;
+    --blue: #3b82f6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+    background: rgba(10, 10, 15, 0.8);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-logo {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--accent) !important;
+    color: var(--bg) !important;
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem !important;
+    transition: opacity 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.9; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6rem 1.5rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 1rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  h1 {
+    font-size: clamp(2.8rem, 6vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 1.2rem;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+  h1 .green { color: var(--accent); }
+  .hero-sub {
+    font-size: 1.2rem;
+    color: var(--muted);
+    max-width: 540px;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* TERMINAL */
+  .terminal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 620px;
+    text-align: left;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease 0.3s both;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .terminal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .terminal-dot:nth-child(1) { background: #ff5f57; }
+  .terminal-dot:nth-child(2) { background: #febc2e; }
+  .terminal-dot:nth-child(3) { background: #28c840; }
+  .terminal-title {
+    margin-left: 8px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .terminal-body {
+    padding: 1.2rem 1.5rem;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+  .terminal-body .prompt { color: var(--accent); }
+  .terminal-body .cmd { color: var(--text); }
+  .terminal-body .comment { color: var(--muted); }
+  .terminal-body .score { color: var(--accent); font-weight: 700; }
+  .terminal-body .finding { color: var(--yellow); }
+  .terminal-body .dim { color: #555568; }
+
+  /* INSTALL BAR */
+  .install-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    animation: fadeUp 0.6s ease 0.4s both;
+  }
+  .install-cmd {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 1.2rem;
+    font-family: 'SF Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .install-cmd:hover { border-color: var(--accent); }
+  .install-cmd .dollar { color: var(--muted); }
+  .copy-icon {
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .install-cmd:hover .copy-icon { color: var(--accent); }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+
+  /* SECTIONS */
+  section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 5rem 1.5rem;
+  }
+  .section-label {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+  h2 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .section-sub {
+    color: var(--muted);
+    max-width: 600px;
+    margin-bottom: 3rem;
+    font-size: 1.05rem;
+  }
+
+  /* CATEGORIES GRID */
+  .categories {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .cat-card {
+    background: var(--surface);
+    padding: 1.8rem;
+    transition: background 0.2s;
+  }
+  .cat-card:hover { background: #16161f; }
+  .cat-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+  .cat-name {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+  }
+  .cat-max {
+    font-size: 0.75rem;
+    color: var(--red);
+    font-weight: 600;
+    font-family: monospace;
+    margin-bottom: 0.5rem;
+  }
+  .cat-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* HOW IT WORKS */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+  .step {
+    position: relative;
+  }
+  .step-num {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+  .step h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .step p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* AGENTS */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .agent-card {
+    background: var(--surface);
+    padding: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .agent-card:hover { background: #16161f; }
+  .agent-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .agent-name { font-weight: 700; margin-bottom: 0.2rem; }
+  .agent-desc { font-size: 0.85rem; color: var(--muted); }
+  .agent-code {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-top: 0.5rem;
+    background: rgba(34, 197, 94, 0.08);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* BENCHMARKS */
+  .bench-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .bench-table th {
+    background: var(--surface);
+    text-align: left;
+    padding: 1rem 1.2rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .bench-table td {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .bench-table tr:last-child td { border-bottom: none; }
+  .bench-table tr:hover td { background: var(--surface); }
+  .score-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    font-family: monospace;
+  }
+  .score-red { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+  .score-yellow { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
+  .stars { color: var(--muted); font-size: 0.85rem; }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    padding: 6rem 1.5rem;
+    position: relative;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  .cta-section p {
+    color: var(--muted);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .categories { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .agents-grid { grid-template-columns: 1fr; }
+    .nav-links a:not(.nav-cta) { display: none; }
+    .install-bar { flex-direction: column; }
+    .bench-table { font-size: 0.85rem; }
+    .bench-table th, .bench-table td { padding: 0.7rem; }
+  }
+  @media (max-width: 480px) {
+    .steps { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo"><span>&#9679;</span> python-doctor</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#agents">Agents</a>
+      <a href="#benchmarks">Benchmarks</a>
+      <a href="https://github.com/saikatkumardey/python-doctor" class="nav-cta">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="badge">
+    <span class="badge-dot"></span>
+    v2026.3.20 on PyPI
+  </div>
+  <h1>One command.<br><span class="green">One score.</span></h1>
+  <p class="hero-sub">
+    Scan any Python codebase and get a 0&ndash;100 health score.
+    9 analyzers. Project profiles. Built for AI agents.
+  </p>
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot"></span>
+      <span class="terminal-dot"></span>
+      <span class="terminal-dot"></span>
+      <span class="terminal-title">terminal</span>
+    </div>
+    <div class="terminal-body">
+      <div><span class="prompt">$</span> <span class="cmd">python-doctor .</span></div>
+      <br>
+      <div><span class="dim">scanning 47 files...</span></div>
+      <br>
+      <div><span class="comment">Security ........</span> <span class="score">OK</span></div>
+      <div><span class="comment">Lint ............</span> <span class="finding">2 issues</span></div>
+      <div><span class="comment">Dead Code .......</span> <span class="score">OK</span></div>
+      <div><span class="comment">Complexity ......</span> <span class="score">OK</span></div>
+      <div><span class="comment">Structure .......</span> <span class="score">OK</span></div>
+      <div><span class="comment">Dependencies ....</span> <span class="score">OK</span></div>
+      <div><span class="comment">Docstrings ......</span> <span class="finding">1 issue</span></div>
+      <div><span class="comment">Imports .........</span> <span class="score">OK</span></div>
+      <div><span class="comment">Exceptions ......</span> <span class="score">OK</span></div>
+      <br>
+      <div><span class="score">Score: 94/100 (Excellent)</span></div>
+    </div>
+  </div>
+  <div class="install-bar">
+    <div class="install-cmd" onclick="copyInstall()" id="install-box">
+      <span class="dollar">$</span>
+      <span>curl -sL https://raw.githubusercontent.com/saikatkumardey/python-doctor/main/install.sh | sh</span>
+      <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    </div>
+    <a href="https://github.com/saikatkumardey/python-doctor" class="btn-primary">View on GitHub</a>
+  </div>
+  <div class="alt-install" style="margin-top:0.8rem;animation:fadeUp 0.6s ease 0.5s both;">
+    <span style="color:var(--muted);font-size:0.85rem;">Also: <code style="color:var(--text);font-size:0.85rem;">pip install python-doctor</code> &middot; <code style="color:var(--text);font-size:0.85rem;">uv tool install python-doctor</code> &middot; <code style="color:var(--text);font-size:0.85rem;">pipx install python-doctor</code></span>
+  </div>
+</div>
+
+<section id="features">
+  <div class="section-label">What it checks</div>
+  <h2>9 categories. Smart defaults.</h2>
+  <p class="section-sub">
+    Wraps Bandit, Ruff, Vulture, Radon, and 4 custom AST analyzers into a single score.
+    Auto-detects your project type. Configurable via <code style="color:var(--accent);">[tool.python-doctor]</code> in pyproject.toml.
+  </p>
+  <div class="categories">
+    <div class="cat-card">
+      <span class="cat-icon">&#128274;</span>
+      <div class="cat-name">Security</div>
+      <div class="cat-max">-30 max</div>
+      <div class="cat-desc">SQL injection, hardcoded secrets, unsafe calls. Powered by Bandit with context-aware filtering for test and example files.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#129529;</span>
+      <div class="cat-name">Lint</div>
+      <div class="cat-max">-25 max</div>
+      <div class="cat-desc">Unused imports, undefined names, style violations. Powered by Ruff.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#128128;</span>
+      <div class="cat-name">Dead Code</div>
+      <div class="cat-max">-15 max</div>
+      <div class="cat-desc">Unused functions, variables, and imports. Powered by Vulture.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#128260;</span>
+      <div class="cat-name">Complexity</div>
+      <div class="cat-max">-15 max</div>
+      <div class="cat-desc">Cyclomatic complexity analysis. Flags functions over CC 10. Powered by Radon.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#127959;</span>
+      <div class="cat-name">Structure</div>
+      <div class="cat-max">-15 max</div>
+      <div class="cat-desc">File sizes, test coverage ratio, type hints, README, LICENSE, linter config.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#128230;</span>
+      <div class="cat-name">Dependencies</div>
+      <div class="cat-max">-15 max</div>
+      <div class="cat-desc">Build file validation, no mixed systems, pip-audit vulnerability scanning.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#128221;</span>
+      <div class="cat-name">Docstrings</div>
+      <div class="cat-max">-10 max</div>
+      <div class="cat-desc">Public function and class docstring coverage analysis.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#128279;</span>
+      <div class="cat-name">Imports</div>
+      <div class="cat-max">-10 max</div>
+      <div class="cat-desc">Star import detection and circular dependency analysis.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#9889;</span>
+      <div class="cat-name">Exceptions</div>
+      <div class="cat-max">-10 max</div>
+      <div class="cat-desc">Bare except blocks and silently swallowed exceptions.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">Profiles</div>
+  <h2>Knows what you're building</h2>
+  <p class="section-sub">Auto-detects your project type from pyproject.toml and adjusts scoring. Override with <code style="color:var(--accent);">--profile</code> or config.</p>
+  <div class="categories" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="cat-card">
+      <span class="cat-icon">&#9881;</span>
+      <div class="cat-name">CLI</div>
+      <div class="cat-desc">Suppresses subprocess and shell-related Bandit rules. Caps security at -15.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#127760;</span>
+      <div class="cat-name">Web</div>
+      <div class="cat-desc">Default scoring. Full security analysis for web-facing code.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#128218;</span>
+      <div class="cat-name">Library</div>
+      <div class="cat-desc">Stricter docstring requirements. Public API docs matter more.</div>
+    </div>
+    <div class="cat-card">
+      <span class="cat-icon">&#128196;</span>
+      <div class="cat-name">Script</div>
+      <div class="cat-desc">Relaxed structure. No tests or license required for quick scripts.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-label">The loop</div>
+  <h2>How agents use it</h2>
+  <p class="section-sub">Run, read, fix, verify. Python Doctor was designed for this loop from day one.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Scan</h3>
+      <p>Run <code>python-doctor . --json</code> and get structured findings with file paths and line numbers.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Fix</h3>
+      <p>Use <code>--fix</code> for auto-fixable issues. The agent handles the rest by reading the JSON output.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Verify</h3>
+      <p>Re-run with <code>--score</code> to confirm the score improved. Exit code 1 if below 50.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <h3>Ship</h3>
+      <p>Score target met. Run <code>--badge</code> for a README badge. Use <code>--ci</code> to auto-update it on every push.</p>
+    </div>
+  </div>
+</section>
+
+<section id="agents">
+  <div class="section-label">Integrations</div>
+  <h2>Works with every agent</h2>
+  <p class="section-sub">If it can run a shell command, it can use Python Doctor.</p>
+  <div class="agents-grid">
+    <div class="agent-card">
+      <div class="agent-icon">CC</div>
+      <div>
+        <div class="agent-name">Claude Code</div>
+        <div class="agent-desc">Install as a plugin. Use the <code>/python-doctor</code> slash command after modifying Python files.</div>
+        <div class="agent-code">/plugin marketplace add saikatkumardey/python-doctor</div>
+      </div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">Cu</div>
+      <div>
+        <div class="agent-name">Cursor</div>
+        <div class="agent-desc">Add a rule file to <code>.cursor/rules/</code> and it runs automatically on Python changes.</div>
+        <div class="agent-code">.cursor/rules/python-doctor.mdc</div>
+      </div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">Cx</div>
+      <div>
+        <div class="agent-name">OpenAI Codex</div>
+        <div class="agent-desc">Add the check to <code>AGENTS.md</code>. Codex reads it and runs the scan automatically.</div>
+        <div class="agent-code">python-doctor . --json</div>
+      </div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">CI</div>
+      <div>
+        <div class="agent-name">GitHub Actions</div>
+        <div class="agent-desc">One-line CI step. Fails the build if score drops below 50. Use <code>--ci</code> to generate the workflow.</div>
+        <div class="agent-code">python-doctor --ci > .github/workflows/python-doctor.yml</div>
+      </div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">Ws</div>
+      <div>
+        <div class="agent-name">Windsurf / Cline / Aider</div>
+        <div class="agent-desc">Add to your project rules or system prompt. Any agent that can run a shell command works.</div>
+        <div class="agent-code">python-doctor . --json</div>
+      </div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">uv</div>
+      <div>
+        <div class="agent-name">One-shot with uvx</div>
+        <div class="agent-desc">No install needed. Run directly on any project with uvx.</div>
+        <div class="agent-code">uvx python-doctor /path/to/project</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="benchmarks">
+  <div class="section-label">Real scores</div>
+  <h2>Benchmarks on popular projects</h2>
+  <p class="section-sub">Strict, opinionated scores. These are real scans on real repos.</p>
+  <table class="bench-table">
+    <thead>
+      <tr>
+        <th>Project</th>
+        <th>Stars</th>
+        <th>Score</th>
+        <th>Top findings</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>requests</strong></td>
+        <td><span class="stars">52k+</span></td>
+        <td><span class="score-badge score-red">42/100</span></td>
+        <td>Weak hashes (B324), complexity (CC 21), large files, no type hints</td>
+      </tr>
+      <tr>
+        <td><strong>flask</strong></td>
+        <td><span class="stars">69k+</span></td>
+        <td><span class="score-badge score-yellow">47/100</span></td>
+        <td>Hardcoded passwords, complexity (CC 23), large files (app.py: 1625 lines), bare except</td>
+      </tr>
+      <tr>
+        <td><strong>fastapi</strong></td>
+        <td><span class="stars">82k+</span></td>
+        <td><span class="score-badge score-red">26/100</span></td>
+        <td>B101 asserts in source, routing.py (4956 lines), 6% docstring coverage</td>
+      </tr>
+      <tr>
+        <td><strong>python-doctor</strong></td>
+        <td><span class="stars">&#8212;</span></td>
+        <td><span class="score-badge" style="background:rgba(34,197,94,0.15);color:var(--accent);">98/100</span></td>
+        <td>Dogfooded. Ran on itself, fixed everything it found.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="cta-section">
+  <h2>Check your codebase health</h2>
+  <p>One command. Thirty seconds. No config.</p>
+  <div class="cta-buttons">
+    <a href="https://pypi.org/project/python-doctor/" class="btn-primary">Install from PyPI</a>
+    <a href="https://github.com/saikatkumardey/python-doctor" class="btn-secondary">View source</a>
+  </div>
+</div>
+
+<footer>
+  <p>Built by <a href="https://github.com/saikatkumardey">Saikat Kumar Dey</a>. MIT License.</p>
+</footer>
+
+<script>
+function copyInstall() {
+  const cmd = 'curl -sL https://raw.githubusercontent.com/saikatkumardey/python-doctor/main/install.sh | sh';
+  navigator.clipboard.writeText(cmd).then(() => {
+    const box = document.getElementById('install-box');
+    const orig = box.innerHTML;
+    box.querySelector('span:nth-child(2)').textContent = 'Copied!';
+    setTimeout(() => {
+      box.querySelector('span:nth-child(2)').textContent = cmd;
+    }, 1500);
+  });
+}
+</script>
+
+</body>
+</html>
