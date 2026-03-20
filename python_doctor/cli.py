@@ -7,8 +7,6 @@ import os
 import sys
 
 from . import __version__
-from .config import Config, load_config
-from .profile import detect_profile, profile_for_kind
 from .analyzers import (
     bandit_analyzer,
     complexity,
@@ -20,6 +18,8 @@ from .analyzers import (
     structure,
     vulture_analyzer,
 )
+from .config import load_config
+from .profile import detect_profile, profile_for_kind
 from .rules import CATEGORIES
 from .scorer import category_score, compute_score, score_label
 
@@ -36,6 +36,63 @@ ANALYZERS = [
 ]
 
 MAX_FINDINGS_DISPLAY = 5
+
+BADGE_CI_WORKFLOW = """\
+name: Python Doctor
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install python-doctor
+        run: pipx install python-doctor
+
+      - name: Run python-doctor
+        id: doctor
+        run: |
+          score=$(python-doctor . --score 2>/dev/null || echo "0")
+          echo "score=$score" >> "$GITHUB_OUTPUT"
+          echo "Python Doctor score: $score/100"
+
+      - name: Determine badge color
+        id: color
+        run: |
+          score=${{ steps.doctor.outputs.score }}
+          if [ "$score" -ge 90 ]; then
+            echo "color=brightgreen" >> "$GITHUB_OUTPUT"
+          elif [ "$score" -ge 75 ]; then
+            echo "color=green" >> "$GITHUB_OUTPUT"
+          elif [ "$score" -ge 50 ]; then
+            echo "color=yellow" >> "$GITHUB_OUTPUT"
+          else
+            echo "color=red" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update badge in README
+        run: |
+          score=${{ steps.doctor.outputs.score }}
+          color=${{ steps.color.outputs.color }}
+          encoded_score=$(echo "${score}/100" | sed 's|/|%2F|g')
+          sed -i "s|python--doctor-[0-9]*%2F100-[a-z]*|python--doctor-${encoded_score}-${color}|" README.md
+
+      - name: Commit if changed
+        run: |
+          git diff --quiet README.md && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "ci: update python-doctor badge to ${{ steps.doctor.outputs.score }}/100"
+          git push
+"""
 
 
 def run_analyzers(path: str, fix: bool = False, profile_name: str | None = None):
@@ -133,6 +190,28 @@ def print_report(results, path: str, verbose: bool = False):
         print()
 
 
+def _badge_color(score: int) -> str:
+    """Return shields.io color for a given score."""
+    if score >= 90:
+        return "brightgreen"
+    if score >= 75:
+        return "green"
+    if score >= 50:
+        return "yellow"
+    return "red"
+
+
+def _print_badge(score: int):
+    """Print a shields.io badge markdown snippet."""
+    color = _badge_color(score)
+    encoded = f"{score}%2F100"
+    url = f"https://img.shields.io/badge/python--doctor-{encoded}-{color}"
+    print(f"[![python-doctor]({url})](https://github.com/saikatkumardey/python-doctor)")
+    print()
+    print("Add this to your README.md. To auto-update the score on every push,")
+    print("run: python-doctor --ci > .github/workflows/python-doctor.yml")
+
+
 def main():
     """CLI entry point for python-doctor."""
     parser = argparse.ArgumentParser(
@@ -150,9 +229,16 @@ def main():
         default=None,
         help="Override auto-detected project profile",
     )
+    parser.add_argument("--badge", action="store_true", help="Output a shields.io badge markdown for your README")
+    parser.add_argument("--ci", action="store_true", help="Output a GitHub Actions workflow for auto-updating the badge")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     args = parser.parse_args()
+
+    if args.ci:
+        print(BADGE_CI_WORKFLOW)
+        return
+
     path = os.path.abspath(args.path)
 
     if not os.path.isdir(path):
@@ -161,6 +247,10 @@ def main():
 
     results = run_analyzers(path, fix=args.fix, profile_name=args.profile)
     score = compute_score(results)
+
+    if args.badge:
+        _print_badge(score)
+        return
 
     if args.score:
         print(score)

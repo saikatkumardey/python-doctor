@@ -1,6 +1,5 @@
 """Vulture dead code analyzer."""
 
-import os
 import re
 import shutil
 import subprocess  # nosec B404 — required for running CLI tools
@@ -8,7 +7,6 @@ import sys
 
 from ..rules import CATEGORIES, VULTURE_COST, AnalyzerResult, Finding
 from ._util import is_test_file
-
 
 # Pattern to detect underscore-prefixed names in vulture messages
 _UNUSED_UNDERSCORE = re.compile(r"unused \w+ '(_[^']*)'")

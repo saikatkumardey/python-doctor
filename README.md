@@ -120,6 +120,25 @@ Re-run to verify the score improved. Target: 80+.
 
 Exits with code 1 if score < 50.
 
+## Badge
+
+Add a live score badge to your README:
+
+```bash
+# 1. Get your badge markdown (runs a scan)
+python-doctor . --badge
+
+# 2. Generate the CI workflow that auto-updates it on every push
+python-doctor --ci > .github/workflows/python-doctor.yml
+
+# 3. Commit both and push
+git add README.md .github/workflows/python-doctor.yml
+git commit -m "Add python-doctor badge"
+git push
+```
+
+The CI workflow runs `python-doctor` on every push to `main`, updates the badge score in your README, and auto-commits the change.
+
 ## Usage
 
 ```bash
