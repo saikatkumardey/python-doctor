@@ -164,7 +164,7 @@ python-doctor . --fix
 
 | Category | Max | What |
 |----------|-----|------|
-| 🔒 Security | -30 | Bandit (SQLi, hardcoded secrets, unsafe calls). Auto-skips `assert` in test files. |
+| 🔒 Security | -30 | Bandit (SQLi, hardcoded secrets, unsafe calls). Context-aware: skips noise rules in test/example files. |
 | 🧹 Lint | -25 | Ruff (unused imports, undefined names, style) |
 | 💀 Dead Code | -15 | Vulture (unused functions, variables, imports) |
 | 🔄 Complexity | -15 | Radon (cyclomatic complexity > 10) |
@@ -180,11 +180,11 @@ Score = `max(0, 100 - total_deductions)`. Each category is capped at its max.
 
 | Project | Stars | Score | Profile | Top Findings |
 |---------|-------|-------|---------|-------------|
-| [requests](https://github.com/psf/requests) | 52k+ | **27/100** (Critical) | library | Security (B113 no-timeout in tests, B324 weak hashes), complexity (CC 21), large files, no type hints |
-| [flask](https://github.com/pallets/flask) | 69k+ | **47/100** (Critical) | web | Security (hardcoded passwords, debug=True), complexity (CC 27), large files (app.py: 1625 lines), bare except |
-| [fastapi](https://github.com/tiangolo/fastapi) | 82k+ | **26/100** (Critical) | web | Security (hundreds of B101 asserts in docs_src/), large files (routing.py: 4956 lines), 6% docstring coverage |
+| [requests](https://github.com/psf/requests) | 52k+ | **42/100** (Critical) | library | Weak hashes (B324), complexity (CC 21), large files, no type hints |
+| [flask](https://github.com/pallets/flask) | 69k+ | **47/100** (Critical) | web | Hardcoded passwords, complexity (CC 23), large files (app.py: 1625 lines), bare except |
+| [fastapi](https://github.com/tiangolo/fastapi) | 82k+ | **26/100** (Critical) | web | B101 asserts in source, large files (routing.py: 4956 lines), 6% docstring coverage |
 
-These are strict, opinionated scores. All analyzers ran to completion (10-min timeout). Most deductions come from test/example files triggering security rules — a good signal that python-doctor should weight those contexts differently in future versions.
+Test and example files are automatically excluded from security rules that would be false positives (asserts, hardcoded test passwords, subprocess in scripts). Remaining deductions reflect real source code findings.
 
 ## The Loop
 

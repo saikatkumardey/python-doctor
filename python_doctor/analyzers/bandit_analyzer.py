@@ -8,7 +8,7 @@ import subprocess  # nosec B404 — required for running CLI tools
 import sys
 
 from ..rules import BANDIT_SEVERITY_COST, CATEGORIES, AnalyzerResult, Finding
-from ._util import SKIP_DIRS, is_test_file
+from ._util import SKIP_DIRS, is_example_file, is_test_file
 
 
 def _is_literal_subprocess(finding: dict) -> bool:
@@ -67,8 +67,27 @@ def analyze(path: str, **_kw) -> AnalyzerResult:
         filename = item.get("filename", "")
         line = item.get("line_number", 0)
 
-        # Skip B101 (assert) in test files
-        if test_id == "B101" and is_test_file(filename):
+        in_test = is_test_file(filename)
+        in_example = is_example_file(filename)
+
+        # Skip B101 (assert) in test and example files — asserts are normal there
+        if test_id == "B101" and (in_test or in_example):
+            continue
+
+        # Skip B105/B106/B107 (hardcoded passwords) in test/example files — fake credentials
+        if test_id in ("B105", "B106", "B107") and (in_test or in_example):
+            continue
+
+        # Skip B113 (no timeout on requests) in test files — test code
+        if test_id == "B113" and in_test:
+            continue
+
+        # Skip noise rules in test files — test code legitimately uses these patterns
+        if test_id in ("B110", "B301", "B403", "B404", "B603", "B607") and in_test:
+            continue
+
+        # Skip B603/B607/B404 (subprocess) in scripts/example dirs — build/CI scripts
+        if test_id in ("B603", "B607", "B404") and in_example:
             continue
 
         # Skip B603/B607 when subprocess uses only string literal arguments
