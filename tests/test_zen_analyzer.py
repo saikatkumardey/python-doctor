@@ -12,7 +12,10 @@ def test_detects_deep_nesting(tmp_path):
         "            if True:\n"
         "                while True:\n"
         "                    if True:\n"
-        "                        pass\n"
+        "                        try:\n"
+        "                            pass\n"
+        "                        except:\n"
+        "                            pass\n"
     )
     result = zen_analyzer.analyze(str(tmp_path))
     rules = [f.rule for f in result.findings]
@@ -35,7 +38,7 @@ def test_shallow_nesting_ok(tmp_path):
 def test_detects_long_function(tmp_path):
     code = tmp_path / "long.py"
     lines = ["def long_func():\n"]
-    lines.extend(["    x = 1\n"] * 55)
+    lines.extend(["    x = 1\n"] * 80)
     code.write_text("".join(lines))
     result = zen_analyzer.analyze(str(tmp_path))
     rules = [f.rule for f in result.findings]
@@ -54,7 +57,7 @@ def test_short_function_ok(tmp_path):
 
 def test_detects_too_many_params(tmp_path):
     code = tmp_path / "params.py"
-    code.write_text("def many(a, b, c, d, e, f, g):\n    pass\n")
+    code.write_text("def many(a, b, c, d, e, f, g, h, i, j, k, l):\n    pass\n")
     result = zen_analyzer.analyze(str(tmp_path))
     rules = [f.rule for f in result.findings]
     assert "zen/too-many-params" in rules
@@ -64,7 +67,7 @@ def test_self_not_counted_as_param(tmp_path):
     code = tmp_path / "method.py"
     code.write_text(
         "class Foo:\n"
-        "    def method(self, a, b, c, d, e):\n"
+        "    def method(self, a, b, c, d, e, f, g, h, i, j):\n"
         "        pass\n"
     )
     result = zen_analyzer.analyze(str(tmp_path))
@@ -74,7 +77,7 @@ def test_self_not_counted_as_param(tmp_path):
 
 def test_detects_large_class(tmp_path):
     code = tmp_path / "big.py"
-    methods = "\n".join(f"    def method_{i}(self):\n        pass\n" for i in range(12))
+    methods = "\n".join(f"    def method_{i}(self):\n        pass\n" for i in range(17))
     code.write_text(f"class Big:\n{methods}")
     result = zen_analyzer.analyze(str(tmp_path))
     rules = [f.rule for f in result.findings]

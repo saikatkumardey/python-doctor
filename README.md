@@ -164,11 +164,11 @@ python-doctor . --fix
 
 | Category | Weight | Max | What |
 |----------|--------|-----|------|
-| 🔒 Security | 5 | -25 | Bandit (SQLi, hardcoded secrets, unsafe calls). Context-aware: skips noise in test/example files. |
-| 🧹 Lint | 4 | -20 | Ruff (unused imports, undefined names, style) |
-| 🔄 Complexity | 3 | -15 | Radon (cyclomatic complexity > 10) |
-| 🧘 Zen | 3 | -15 | Deep nesting, long functions, too many params, large classes, dense lines |
-| 🏗 Structure | 2 | -10 | File sizes, test ratio, type hints, README, LICENSE, linter/type-checker config |
+| 🔒 Security | 5 | -25 | Bandit (SQLi, hardcoded secrets, unsafe calls). Context-aware: skips noise in test/example/docs files. |
+| 🧹 Lint | 4 | -20 | Ruff (unused imports, undefined names, style). Excludes docs/. |
+| 🔄 Complexity | 3 | -15 | Radon (cyclomatic complexity > 15). Excludes test files. |
+| 🧘 Zen | 3 | -15 | Deep nesting (>5), long functions (>75 lines), too many params (>10), large classes (>15 methods) |
+| 🏗 Structure | 2 | -10 | File sizes (>1000 lines), test ratio, type hints, README, LICENSE, linter/type-checker config |
 | ⚡ Exceptions | 2 | -10 | Bare `except:`, silently swallowed exceptions |
 | 🔗 Imports | 1 | -5 | Star imports, circular import detection |
 
@@ -178,11 +178,11 @@ Weights are relative — add or remove a category and the max deductions automat
 
 | Project | Stars | Score | Profile | Top Findings |
 |---------|-------|-------|---------|-------------|
-| [requests](https://github.com/psf/requests) | 52k+ | **42/100** (Critical) | library | Weak hashes (B324), complexity (CC 21), large files, no type hints |
-| [flask](https://github.com/pallets/flask) | 69k+ | **47/100** (Critical) | web | Hardcoded passwords, complexity (CC 23), large files (app.py: 1625 lines), bare except |
-| [fastapi](https://github.com/tiangolo/fastapi) | 82k+ | **26/100** (Critical) | web | B101 asserts in source, large files (routing.py: 4956 lines), deep nesting |
+| [requests](https://github.com/psf/requests) | 52k+ | **81/100** (Good) | library | Weak hashes (B324), complexity (CC 21), large files, no type hints |
+| [flask](https://github.com/pallets/flask) | 69k+ | **78/100** (Good) | web | Hardcoded passwords, complexity (CC 23), large files (app.py: 1625 lines) |
+| [fastapi](https://github.com/fastapi/fastapi) | 82k+ | **78/100** (Good) | web | Complexity (CC 45), large files (routing.py: 4956 lines), many params |
 
-Test and example files are automatically excluded from security rules that would be false positives (asserts, hardcoded test passwords, subprocess in scripts). Remaining deductions reflect real source code findings.
+Test and example files are excluded from security and complexity analysis. Docs directories are excluded from linting. Remaining deductions reflect real source code findings.
 
 ## The Loop
 
@@ -193,7 +193,7 @@ This is how an agent uses it:
 3. `python-doctor . --score` → verify improvement
 4. Repeat until score target met
 
-We built Python Doctor, then ran it on itself. Score: 47. Fixed everything it flagged. Score: 98. The tool eats its own dogfood.
+We built Python Doctor, then ran it on itself. Score: 47. Fixed everything it flagged. Score: 92. The tool eats its own dogfood.
 
 ## License
 

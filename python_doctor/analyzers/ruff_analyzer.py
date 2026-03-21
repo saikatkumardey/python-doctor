@@ -21,12 +21,12 @@ def analyze(path: str, fix: bool = False, **_kw) -> AnalyzerResult:
     try:
         if fix:
             fix_cmd = cmd + ["--fix",
-                 "--exclude", ".venv,node_modules,__pycache__,.git,.tox",
+                 "--exclude", ".venv,node_modules,__pycache__,.git,.tox,docs",
                  path]
             subprocess.run(fix_cmd, capture_output=True, text=True, timeout=120)  # nosec B603
 
         proc = subprocess.run(cmd + ["--output-format", "json",  # nosec B603
-             "--exclude", ".venv,node_modules,__pycache__,.git,.tox",
+             "--exclude", ".venv,node_modules,__pycache__,.git,.tox,docs",
              path],
             capture_output=True, text=True, timeout=120)
         items = json.loads(proc.stdout) if proc.stdout.strip() else []

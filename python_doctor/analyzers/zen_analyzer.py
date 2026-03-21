@@ -8,20 +8,20 @@ from ..rules import (
     AnalyzerResult,
     Finding,
 )
-from ._util import SKIP_DIRS, is_test_file
+from ._util import SKIP_DIRS, is_example_file, is_test_file
 
 # Costs
-DEEP_NESTING_COST = 2
-LONG_FUNCTION_COST = 2
-MANY_PARAMS_COST = 1
-LARGE_CLASS_COST = 2
+DEEP_NESTING_COST = 1
+LONG_FUNCTION_COST = 1
+MANY_PARAMS_COST = 0.5
+LARGE_CLASS_COST = 1
 DENSE_LINE_COST = 0.5
 
 # Thresholds
-NESTING_THRESHOLD = 4
-LONG_FUNCTION_LINES = 50
-MANY_PARAMS_THRESHOLD = 5
-LARGE_CLASS_METHODS = 10
+NESTING_THRESHOLD = 5
+LONG_FUNCTION_LINES = 75
+MANY_PARAMS_THRESHOLD = 10
+LARGE_CLASS_METHODS = 15
 DENSE_STATEMENTS_THRESHOLD = 2  # multiple statements separated by ;
 
 
@@ -85,7 +85,8 @@ def _check_functions(tree: ast.Module, fp: str, result: AnalyzerResult) -> None:
         # Exclude 'self' and 'cls'
         if nparams > 0 and node.args.args and node.args.args[0].arg in ("self", "cls"):
             nparams -= 1
-        if nparams > MANY_PARAMS_THRESHOLD:
+        # Skip constructors — they naturally have many params in frameworks
+        if nparams > MANY_PARAMS_THRESHOLD and name not in ("__init__", "__init_subclass__"):
             result.findings.append(Finding(
                 category="zen", rule="zen/too-many-params",
                 message=f"Function '{name}' has {nparams} parameters (max {MANY_PARAMS_THRESHOLD})",
@@ -153,9 +154,12 @@ def analyze(path: str, **_kw) -> AnalyzerResult:
             if not f.endswith(".py"):
                 continue
             fp = os.path.join(root, f)
-            if is_test_file(fp):
+            if is_test_file(fp) or is_example_file(fp):
                 continue
             _check_file(fp, result)
 
-    result.deduction = min(sum(f.cost for f in result.findings), max_ded)
+    # Diminishing returns: top 3 findings at full cost, rest at 10%
+    sorted_costs = sorted((f.cost for f in result.findings), reverse=True)
+    total = sum(c if i < 3 else c * 0.1 for i, c in enumerate(sorted_costs))
+    result.deduction = min(total, max_ded)
     return result

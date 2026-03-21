@@ -70,8 +70,9 @@ def analyze(path: str, **_kw) -> AnalyzerResult:
         in_test = is_test_file(filename)
         in_example = is_example_file(filename)
 
-        # Skip B101 (assert) in test and example files — asserts are normal there
-        if test_id == "B101" and (in_test or in_example):
+        # Skip B101 (assert) everywhere — asserts are a standard Python pattern
+        # for internal invariants, not a security issue
+        if test_id == "B101":
             continue
 
         # Skip B105/B106/B107 (hardcoded passwords) in test/example files — fake credentials
@@ -83,7 +84,7 @@ def analyze(path: str, **_kw) -> AnalyzerResult:
             continue
 
         # Skip noise rules in test files — test code legitimately uses these patterns
-        if test_id in ("B110", "B301", "B403", "B404", "B603", "B607") and in_test:
+        if test_id in ("B110", "B201", "B301", "B403", "B404", "B603", "B607", "B704") and in_test:
             continue
 
         # Skip B603/B607/B404 (subprocess) in scripts/example dirs — build/CI scripts
