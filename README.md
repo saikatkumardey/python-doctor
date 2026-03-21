@@ -16,7 +16,7 @@ python-doctor .
 
 ## Why?
 
-Setting up linting, security scanning, dead code detection, and complexity analysis means configuring 5+ tools, reading 5 different output formats, and deciding what matters. Python Doctor wraps them all into a single command with a single score.
+Setting up linting, security scanning, and complexity analysis means configuring multiple tools, reading different output formats, and deciding what matters. Python Doctor wraps them into a single command with a single score.
 
 An agent doesn't need to know what Bandit is. It just needs to know the score dropped and which lines to fix.
 
@@ -160,21 +160,19 @@ python-doctor . --fix
 
 ## What It Checks
 
-9 categories, 5 external tools + 4 custom AST analyzers:
+7 categories, weighted by impact and auto-scaled to 100:
 
-| Category | Max | What |
-|----------|-----|------|
-| 🔒 Security | -30 | Bandit (SQLi, hardcoded secrets, unsafe calls). Context-aware: skips noise rules in test/example files. |
-| 🧹 Lint | -25 | Ruff (unused imports, undefined names, style) |
-| 💀 Dead Code | -15 | Vulture (unused functions, variables, imports) |
-| 🔄 Complexity | -15 | Radon (cyclomatic complexity > 10) |
-| 🏗 Structure | -15 | File sizes, test ratio, type hints, README, LICENSE, linter/type-checker config |
-| 📦 Dependencies | -15 | Build file exists, no mixed systems, pip-audit vulnerabilities |
-| 📝 Docstrings | -10 | Public function/class docstring coverage |
-| 🔗 Imports | -10 | Star imports, circular import detection |
-| ⚡ Exceptions | -10 | Bare `except:`, silently swallowed exceptions |
+| Category | Weight | Max | What |
+|----------|--------|-----|------|
+| 🔒 Security | 5 | -25 | Bandit (SQLi, hardcoded secrets, unsafe calls). Context-aware: skips noise in test/example files. |
+| 🧹 Lint | 4 | -20 | Ruff (unused imports, undefined names, style) |
+| 🔄 Complexity | 3 | -15 | Radon (cyclomatic complexity > 10) |
+| 🧘 Zen | 3 | -15 | Deep nesting, long functions, too many params, large classes, dense lines |
+| 🏗 Structure | 2 | -10 | File sizes, test ratio, type hints, README, LICENSE, linter/type-checker config |
+| ⚡ Exceptions | 2 | -10 | Bare `except:`, silently swallowed exceptions |
+| 🔗 Imports | 1 | -5 | Star imports, circular import detection |
 
-Score = `max(0, 100 - total_deductions)`. Each category is capped at its max.
+Weights are relative — add or remove a category and the max deductions automatically rebalance to sum to 100. Score = `max(0, 100 - total_deductions)`.
 
 ## Scores on Popular Projects
 
@@ -182,7 +180,7 @@ Score = `max(0, 100 - total_deductions)`. Each category is capped at its max.
 |---------|-------|-------|---------|-------------|
 | [requests](https://github.com/psf/requests) | 52k+ | **42/100** (Critical) | library | Weak hashes (B324), complexity (CC 21), large files, no type hints |
 | [flask](https://github.com/pallets/flask) | 69k+ | **47/100** (Critical) | web | Hardcoded passwords, complexity (CC 23), large files (app.py: 1625 lines), bare except |
-| [fastapi](https://github.com/tiangolo/fastapi) | 82k+ | **26/100** (Critical) | web | B101 asserts in source, large files (routing.py: 4956 lines), 6% docstring coverage |
+| [fastapi](https://github.com/tiangolo/fastapi) | 82k+ | **26/100** (Critical) | web | B101 asserts in source, large files (routing.py: 4956 lines), deep nesting |
 
 Test and example files are automatically excluded from security rules that would be false positives (asserts, hardcoded test passwords, subprocess in scripts). Remaining deductions reflect real source code findings.
 

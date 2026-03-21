@@ -1,6 +1,6 @@
 """Tests for the scorer module."""
 
-from python_doctor.rules import AnalyzerResult
+from python_doctor.rules import CATEGORIES, AnalyzerResult
 from python_doctor.scorer import category_score, compute_score, score_label
 
 
@@ -44,9 +44,9 @@ def test_score_label_critical():
 def test_category_score():
     """Category score is max_deduction minus actual deduction."""
     result = AnalyzerResult(category="security", deduction=12)
-    assert category_score(result) == 13  # 25 - 12
+    assert category_score(result) == CATEGORIES["security"]["max_deduction"] - 12
 
 
 def test_category_score_zero_deduction():
     result = AnalyzerResult(category="lint", deduction=0)
-    assert category_score(result) == 20  # max for lint
+    assert category_score(result) == CATEGORIES["lint"]["max_deduction"]

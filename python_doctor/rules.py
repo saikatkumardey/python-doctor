@@ -2,15 +2,31 @@
 
 from dataclasses import dataclass, field
 
-CATEGORIES = {
-    "security": {"emoji": "🔒", "label": "Security", "max_deduction": 25},
-    "lint": {"emoji": "🧹", "label": "Lint", "max_deduction": 20},
-    "complexity": {"emoji": "🔄", "label": "Complexity", "max_deduction": 15},
-    "structure": {"emoji": "🏗", "label": "Structure", "max_deduction": 10},
-    "imports": {"emoji": "🔗", "label": "Imports", "max_deduction": 5},
-    "exceptions": {"emoji": "⚡", "label": "Exceptions", "max_deduction": 10},
-    "zen": {"emoji": "🧘", "label": "Zen", "max_deduction": 15},
+_CATEGORY_DEFS = {
+    "security": {"emoji": "🔒", "label": "Security", "weight": 5},
+    "lint": {"emoji": "🧹", "label": "Lint", "weight": 4},
+    "complexity": {"emoji": "🔄", "label": "Complexity", "weight": 3},
+    "structure": {"emoji": "🏗", "label": "Structure", "weight": 2},
+    "imports": {"emoji": "🔗", "label": "Imports", "weight": 1},
+    "exceptions": {"emoji": "⚡", "label": "Exceptions", "weight": 2},
+    "zen": {"emoji": "🧘", "label": "Zen", "weight": 3},
 }
+
+def _build_categories(defs: dict) -> dict:
+    """Compute max_deduction from weights so they always sum to exactly 100."""
+    total_weight = sum(d["weight"] for d in defs.values())
+    cats = {
+        name: {**d, "max_deduction": round(d["weight"] / total_weight * 100)}
+        for name, d in defs.items()
+    }
+    # Fix rounding residual by adjusting the highest-weight category
+    residual = 100 - sum(c["max_deduction"] for c in cats.values())
+    if residual:
+        top = max(cats, key=lambda k: cats[k]["weight"])
+        cats[top]["max_deduction"] += residual
+    return cats
+
+CATEGORIES = _build_categories(_CATEGORY_DEFS)
 
 # Security
 BANDIT_SEVERITY_COST = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
