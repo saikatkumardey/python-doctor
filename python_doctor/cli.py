@@ -17,6 +17,7 @@ from .analyzers import (
     ruff_analyzer,
     structure,
     vulture_analyzer,
+    zen_analyzer,
 )
 from .config import load_config
 from .profile import detect_profile, profile_for_kind
@@ -33,6 +34,7 @@ ANALYZERS = [
     ("docs", docstring_analyzer),
     ("imports", imports_analyzer),
     ("exceptions", exceptions_analyzer),
+    ("zen", zen_analyzer),
 ]
 
 MAX_FINDINGS_DISPLAY = 5

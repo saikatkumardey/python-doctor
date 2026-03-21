@@ -1,6 +1,6 @@
 [project]
 name = "python-doctor"
-version = "2026.3.20.1"
+version = "2026.3.21"
 description = "One command. One score. Built for AI agents. Scans Python codebases and returns a 0-100 health score."
 readme = "README.md"
 license = {text = "MIT"}
@@ -43,7 +43,7 @@ Changelog = "https://github.com/saikatkumardey/python-doctor/blob/main/CHANGELOG
 dev = ["pytest>=7.0", "pyinstaller>=6.0", "bumpver>=2024.1"]
 
 [tool.bumpver]
-current_version = "2026.3.20.1"
+current_version = "2026.3.21"
 version_pattern = "YYYY.M.D"
 commit_message = "Bump version to {new_version}"
 tag_message = "v{new_version}"

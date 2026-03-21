@@ -12,6 +12,7 @@ CATEGORIES = {
     "docs": {"emoji": "📝", "label": "Docstrings", "max_deduction": 10},
     "imports": {"emoji": "🔗", "label": "Imports", "max_deduction": 10},
     "exceptions": {"emoji": "⚡", "label": "Exceptions", "max_deduction": 10},
+    "zen": {"emoji": "🧘", "label": "Zen", "max_deduction": 15},
 }
 
 BANDIT_SEVERITY_COST = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
@@ -49,6 +50,13 @@ NO_GITIGNORE_COST = 1
 NO_LINTER_CONFIG_COST = 1
 NO_TYPE_CHECKER_COST = 1
 NO_PY_TYPED_COST = 1
+
+# Zen analyzer
+DEEP_NESTING_COST = 2
+LONG_FUNCTION_COST = 2
+MANY_PARAMS_COST = 1
+LARGE_CLASS_COST = 2
+DENSE_LINE_COST = 0.5
 
 # Structure: test quality
 LOW_TEST_RATIO_COST = 2
