@@ -1,3 +1,3 @@
 """Python Doctor — health scoring for Python codebases."""
 
-__version__ = "2026.3.21.1"
+__version__ = "2026.3.21.2"
