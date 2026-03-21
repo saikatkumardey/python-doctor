@@ -27,3 +27,9 @@ def test_all_categories_have_required_keys():
         assert "label" in cat, f"{name} missing label"
         assert "max_deduction" in cat, f"{name} missing max_deduction"
         assert isinstance(cat["max_deduction"], int)
+
+
+def test_max_deductions_sum_to_100():
+    """Total max deduction across all categories must equal 100."""
+    total = sum(cat["max_deduction"] for cat in CATEGORIES.values())
+    assert total == 100, f"Max deductions sum to {total}, expected 100"

@@ -94,8 +94,6 @@ def profile_for_kind(kind: str) -> Profile:
     if kind == "cli":
         p.suppressed_rules = {"bandit/B404", "bandit/B110", "bandit/B112", "bandit/B603", "bandit/B607"}
         p.max_deduction_overrides = {"security": 15}
-    elif kind == "library":
-        p.max_deduction_overrides = {"docs": 15}
     elif kind == "script":
         p.max_deduction_overrides = {"structure": 5}
         p.suppressed_rules = {"structure/no-tests", "structure/no-license"}

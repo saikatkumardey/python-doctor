@@ -10,13 +10,10 @@ from . import __version__
 from .analyzers import (
     bandit_analyzer,
     complexity,
-    dependency_analyzer,
-    docstring_analyzer,
     exceptions_analyzer,
     imports_analyzer,
     ruff_analyzer,
     structure,
-    vulture_analyzer,
     zen_analyzer,
 )
 from .config import load_config
@@ -27,11 +24,8 @@ from .scorer import category_score, compute_score, score_label
 ANALYZERS = [
     ("security", bandit_analyzer),
     ("lint", ruff_analyzer),
-    ("dead_code", vulture_analyzer),
     ("complexity", complexity),
     ("structure", structure),
-    ("dependencies", dependency_analyzer),
-    ("docs", docstring_analyzer),
     ("imports", imports_analyzer),
     ("exceptions", exceptions_analyzer),
     ("zen", zen_analyzer),

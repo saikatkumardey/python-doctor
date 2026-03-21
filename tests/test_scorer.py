@@ -44,9 +44,9 @@ def test_score_label_critical():
 def test_category_score():
     """Category score is max_deduction minus actual deduction."""
     result = AnalyzerResult(category="security", deduction=12)
-    assert category_score(result) == 18  # 30 - 12
+    assert category_score(result) == 13  # 25 - 12
 
 
 def test_category_score_zero_deduction():
     result = AnalyzerResult(category="lint", deduction=0)
-    assert category_score(result) == 25  # max for lint
+    assert category_score(result) == 20  # max for lint
