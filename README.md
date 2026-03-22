@@ -343,7 +343,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/saikatkumardey/python-doctor
-    rev: v2026.3.21
+    rev: v2026.03.22
     hooks:
       - id: python-doctor
 ```
