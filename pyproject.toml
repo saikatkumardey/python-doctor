@@ -1,6 +1,6 @@
 [project]
 name = "python-doctor"
-version = "2026.3.21.3"
+version = "2026.3.22"
 description = "One command. One score. Built for AI agents. Scans Python codebases and returns a 0-100 health score."
 readme = "README.md"
 license = {text = "MIT"}
