@@ -238,6 +238,15 @@
 <script>
 const README_URL = 'https://raw.githubusercontent.com/saikatkumardey/python-doctor/main/README.md';
 
+const renderer = new marked.Renderer();
+renderer.heading = function({tokens, depth}) {
+  const text = this.parser.parseInline(tokens);
+  const raw = tokens.map(t => t.raw || t.text || '').join('');
+  const id = raw.toLowerCase().replace(/[^\w]+/g, '-').replace(/(^-|-$)/g, '');
+  return `<h${depth} id="${id}">${text}</h${depth}>`;
+};
+marked.use({renderer});
+
 async function loadReadme() {
   const container = document.querySelector('.content');
   try {
