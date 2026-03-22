@@ -34,7 +34,7 @@ dependencies = [
 python-doctor = "python_doctor.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/saikatkumardey/python-doctor"
+Homepage = "https://saikatkumardey.github.io/python-doctor/"
 Repository = "https://github.com/saikatkumardey/python-doctor"
 Issues = "https://github.com/saikatkumardey/python-doctor/issues"
 Changelog = "https://github.com/saikatkumardey/python-doctor/blob/main/CHANGELOG.md"

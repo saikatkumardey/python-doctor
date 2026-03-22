@@ -208,6 +208,78 @@ def _print_badge(score: int):
     print("run: python-doctor --ci > .github/workflows/python-doctor.yml")
 
 
+def _install_pre_commit_hook(min_score: int | None = None):
+    """Install python-doctor as a git pre-commit hook."""
+    git_dir = _find_git_dir()
+    if not git_dir:
+        print("Error: not inside a git repository.", file=sys.stderr)
+        sys.exit(1)
+
+    hooks_dir = os.path.join(git_dir, "hooks")
+    os.makedirs(hooks_dir, exist_ok=True)
+    hook_path = os.path.join(hooks_dir, "pre-commit")
+
+    threshold = min_score if min_score is not None else 50
+    hook_script = f"""\
+#!/bin/sh
+# python-doctor pre-commit hook
+# Installed by: python-doctor --pre-commit
+
+score=$(python-doctor . --score 2>/dev/null)
+if [ $? -ne 0 ] || [ -z "$score" ]; then
+    echo "python-doctor: could not compute score (is it installed?)"
+    exit 1
+fi
+
+if [ "$score" -lt {threshold} ]; then
+    echo ""
+    echo "python-doctor: score $score/100 is below the minimum ({threshold})."
+    echo "Run 'python-doctor . --verbose' to see findings."
+    echo "Run 'python-doctor . --fix' to auto-fix what's possible."
+    echo ""
+    exit 1
+fi
+
+echo "python-doctor: $score/100 — OK"
+"""
+
+    if os.path.exists(hook_path):
+        with open(hook_path) as f:
+            existing = f.read()
+        if "python-doctor" in existing:
+            # Update existing hook
+            with open(hook_path, "w") as f:
+                f.write(hook_script)
+            os.chmod(hook_path, 0o755)
+            print(f"Updated pre-commit hook (min score: {threshold}).")
+            return
+        # Append to existing hook
+        with open(hook_path, "a") as f:
+            f.write("\n" + hook_script.replace("#!/bin/sh\n", ""))
+        print(f"Appended python-doctor to existing pre-commit hook (min score: {threshold}).")
+    else:
+        with open(hook_path, "w") as f:
+            f.write(hook_script)
+        os.chmod(hook_path, 0o755)
+        print(f"Installed pre-commit hook (min score: {threshold}).")
+
+    print(f"  Hook: {hook_path}")
+    print("  Commits will be blocked if score drops below the threshold.")
+
+
+def _find_git_dir() -> str | None:
+    """Walk up from cwd to find the .git directory."""
+    path = os.getcwd()
+    while True:
+        git = os.path.join(path, ".git")
+        if os.path.isdir(git):
+            return git
+        parent = os.path.dirname(path)
+        if parent == path:
+            return None
+        path = parent
+
+
 def main():
     """CLI entry point for python-doctor."""
     parser = argparse.ArgumentParser(
@@ -227,12 +299,23 @@ def main():
     )
     parser.add_argument("--badge", action="store_true", help="Output a shields.io badge markdown for your README")
     parser.add_argument("--ci", action="store_true", help="Output a GitHub Actions workflow for auto-updating the badge")
+    parser.add_argument("--pre-commit", action="store_true", help="Install python-doctor as a pre-commit hook")
+    parser.add_argument(
+        "--min-score",
+        type=int,
+        default=None,
+        help="Minimum score threshold (exit 1 if below). Default: 50",
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     args = parser.parse_args()
 
     if args.ci:
         print(BADGE_CI_WORKFLOW)
+        return
+
+    if args.pre_commit:
+        _install_pre_commit_hook(args.min_score)
         return
 
     path = os.path.abspath(args.path)
@@ -276,7 +359,8 @@ def main():
         return
 
     print_report(results, path, verbose=args.verbose)
-    sys.exit(0 if score >= 50 else 1)
+    threshold = args.min_score if args.min_score is not None else 50
+    sys.exit(0 if score >= threshold else 1)
 
 
 if __name__ == "__main__":

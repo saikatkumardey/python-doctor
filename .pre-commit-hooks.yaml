@@ -1,0 +1,9 @@
+- id: python-doctor
+  name: python-doctor
+  description: Check Python codebase health score
+  entry: python-doctor
+  args: [".", "--verbose"]
+  language: python
+  types: [python]
+  pass_filenames: false
+  always_run: true
