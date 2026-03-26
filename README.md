@@ -8,7 +8,6 @@
     <a href="https://pypi.org/project/python-doctor/"><img src="https://img.shields.io/pypi/v/python-doctor" alt="PyPI"></a>
     <a href="https://pypi.org/project/python-doctor/"><img src="https://img.shields.io/pypi/pyversions/python-doctor" alt="Python"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
-    <a href="https://saikatkumardey.github.io/python-doctor/"><img src="https://img.shields.io/badge/docs-landing%20page-blue" alt="Docs"></a>
   </p>
 </p>
 
