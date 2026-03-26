@@ -1,6 +1,7 @@
 """Tests for the Zen of Python analyzer."""
 
 from python_doctor.analyzers import zen_analyzer
+from python_doctor.analyzers._util import diminishing_deduction
 
 
 def test_detects_deep_nesting(tmp_path):
@@ -77,7 +78,7 @@ def test_self_not_counted_as_param(tmp_path):
 
 def test_detects_large_class(tmp_path):
     code = tmp_path / "big.py"
-    methods = "\n".join(f"    def method_{i}(self):\n        pass\n" for i in range(17))
+    methods = "\n".join(f"    def method_{i}(self):\n        pass\n" for i in range(22))
     code.write_text(f"class Big:\n{methods}")
     result = zen_analyzer.analyze(str(tmp_path))
     rules = [f.rule for f in result.findings]
@@ -136,6 +137,25 @@ def test_deduction_capped(tmp_path):
     code.write_text("".join(funcs))
     result = zen_analyzer.analyze(str(tmp_path))
     assert result.deduction <= 15  # max_deduction for zen category
+
+
+def test_diminishing_deduction_top_n_at_full_cost():
+    """Top-N findings are counted at full cost, the rest at tail_rate."""
+    costs = [10.0, 10.0, 10.0, 10.0, 10.0, 10.0]  # 6 findings of cost 10
+    # top 5 = 50, 1 tail at 10% = 1 → total 51
+    assert diminishing_deduction(costs, top_n=5, tail_rate=0.1, cap=100.0) == 51.0
+
+
+def test_diminishing_deduction_cap_applied():
+    """The cap is enforced even when raw total exceeds it."""
+    costs = [20.0] * 10
+    result = diminishing_deduction(costs, top_n=5, tail_rate=0.1, cap=50.0)
+    assert result == 50.0
+
+
+def test_diminishing_deduction_empty():
+    """Empty cost list returns zero."""
+    assert diminishing_deduction([], top_n=5, tail_rate=0.1, cap=100.0) == 0.0
 
 
 def test_clean_code_no_findings(tmp_path):

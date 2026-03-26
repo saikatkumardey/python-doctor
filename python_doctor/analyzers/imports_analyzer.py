@@ -32,6 +32,9 @@ def _collect_py_files(path: str) -> list[str]:
 
 def _check_star_imports(node: ast.ImportFrom, fp: str, result: AnalyzerResult) -> None:
     """Flag wildcard imports like 'from X import *'."""
+    # Star imports in __init__.py are a standard Python pattern for public API re-exports
+    if os.path.basename(fp) == "__init__.py":
+        return
     if node.names:
         for alias in node.names:
             if alias.name == "*":
@@ -81,6 +84,9 @@ def _detect_circular_imports(imports_graph: dict[str, set[str]], result: Analyze
     for mod_a, deps_a in imports_graph.items():
         for dep in deps_a:
             if dep in imports_graph and mod_a in imports_graph[dep]:
+                # Skip false positives where leaf module names match (stdlib shadowing)
+                if mod_a.rsplit(".", 1)[-1] == dep.rsplit(".", 1)[-1]:
+                    continue
                 cycle_key = tuple(sorted([mod_a, dep]))
                 if cycle_key not in seen_cycles:
                     seen_cycles.add(cycle_key)

@@ -23,3 +23,20 @@ def is_example_file(filepath: str) -> bool:
     """Check if a file is in an example/docs directory."""
     parts = os.path.normpath(filepath).split(os.sep)
     return any(p in _EXAMPLE_DIRS for p in parts)
+
+
+def diminishing_deduction(
+    costs: list[float],
+    top_n: int = 5,
+    tail_rate: float = 0.1,
+    cap: float = 100.0,
+) -> float:
+    """Compute a capped deduction with diminishing returns.
+
+    The *top_n* most expensive findings are counted at full cost; every
+    remaining finding is counted at *tail_rate* of its cost.  The result
+    is capped at *cap*.
+    """
+    sorted_costs = sorted(costs, reverse=True)
+    total = sum(c if i < top_n else c * tail_rate for i, c in enumerate(sorted_costs))
+    return min(total, cap)

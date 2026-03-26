@@ -8,7 +8,7 @@ import subprocess  # nosec B404 — required for running CLI tools
 import sys
 
 from ..rules import BANDIT_SEVERITY_COST, CATEGORIES, AnalyzerResult, Finding
-from ._util import SKIP_DIRS, is_example_file, is_test_file
+from ._util import SKIP_DIRS, diminishing_deduction, is_example_file, is_test_file
 
 
 def _is_literal_subprocess(finding: dict) -> bool:
@@ -100,5 +100,7 @@ def analyze(path: str, **_kw) -> AnalyzerResult:
             file=filename, line=line, severity=sev.lower(), cost=cost,
         ))
 
-    result.deduction = min(sum(f.cost for f in result.findings), max_ded)
+    result.deduction = diminishing_deduction(
+        [f.cost for f in result.findings], top_n=5, tail_rate=0.1, cap=max_ded
+    )
     return result

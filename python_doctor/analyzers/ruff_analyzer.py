@@ -6,6 +6,7 @@ import subprocess  # nosec B404 — required for running CLI tools
 import sys
 
 from ..rules import CATEGORIES, RUFF_ERROR_COST, RUFF_WARNING_COST, AnalyzerResult, Finding
+from ._util import diminishing_deduction, is_example_file, is_test_file
 
 
 def analyze(path: str, fix: bool = False, **_kw) -> AnalyzerResult:
@@ -42,6 +43,11 @@ def analyze(path: str, fix: bool = False, **_kw) -> AnalyzerResult:
         msg = item.get("message", "")
         filename = item.get("filename", "")
         line = item.get("location", {}).get("row", 0)
+
+        # Skip findings in test/example files — they have different quality bar
+        if is_test_file(filename) or is_example_file(filename):
+            continue
+
         # E/W prefixes are warnings, others are errors
         is_warning = code.startswith(("W", "D"))
         cost = RUFF_WARNING_COST if is_warning else RUFF_ERROR_COST
@@ -52,5 +58,7 @@ def analyze(path: str, fix: bool = False, **_kw) -> AnalyzerResult:
             severity="warning" if is_warning else "error", cost=cost,
         ))
 
-    result.deduction = min(sum(f.cost for f in result.findings), max_ded)
+    result.deduction = diminishing_deduction(
+        [f.cost for f in result.findings], top_n=5, tail_rate=0.1, cap=max_ded
+    )
     return result
