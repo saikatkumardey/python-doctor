@@ -11,6 +11,10 @@
   </p>
 </p>
 
+<p align="center">
+  <img src="docs/demo.svg" alt="Demo">
+</p>
+
 Python Doctor scans a Python codebase and returns a **0-100 health score** with structured, actionable output. It wraps security scanning, linting, complexity analysis, and more into a single command — so an AI agent can run it, read the results, fix the issues, and verify the fix in a loop without human intervention.
 
 ```

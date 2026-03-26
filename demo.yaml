@@ -1,0 +1,34 @@
+title: "python-doctor"
+theme: dracula
+prompt: "$ "
+width: 700
+
+steps:
+  - cmd: "python-doctor ."
+    output: |
+      🐍 Python Doctor v2026.03.22
+      Scanning: /home/user/myproject
+
+      📊 Score: 82/100 (Good)
+
+      🔒 Security (25/25) ✓
+        ✓ All clear.
+
+      🧹 Lint (16/20)
+        ✗ F841: unused variable 'x' (api/views.py:45)
+        ✗ F401: unused import 'os' (utils/helpers.py:1)
+
+      🔄 Complexity (15/15) ✓
+        ✓ All clear.
+
+      🧘 Zen (12/15)
+        ⚠ deep-nesting: 6 levels deep (core/engine.py:88)
+
+      🏗 Structure (8/10)
+        ⚠ low-test-ratio: test:source ratio is 0.3
+
+      ⚡ Exceptions (10/10) ✓
+        ✓ All clear.
+
+      🔗 Imports (5/5) ✓
+        ✓ All clear.
