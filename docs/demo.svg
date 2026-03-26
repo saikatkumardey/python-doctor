@@ -1,59 +1,164 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg"
-     width="700" height="672"
-     viewBox="0 0 700 672">
+     width="800" height="1244"
+     viewBox="0 0 800 1244">
   <style>
   @keyframes type-cmd0 {
     0%    { clip-path: inset(0 100% 0 0); }
-    14.423%  { clip-path: inset(0 100% 0 0); animation-timing-function: steps(17, end); }
-    30.769%  { clip-path: inset(0 -20px 0 0); }
+    6.276%  { clip-path: inset(0 100% 0 0); animation-timing-function: steps(17, end); }
+    13.389%  { clip-path: inset(0 -20px 0 0); }
     99.9% { clip-path: inset(0 -20px 0 0); }
     100%  { clip-path: inset(0 100% 0 0); }
   }
   .type-cmd0 {
     clip-path: inset(0 100% 0 0);
-    animation: type-cmd0 3.467s linear 0s infinite;
+    animation: type-cmd0 7.967s linear 0s infinite;
   }
 
   @keyframes cursor-cmd0 {
-    0%, 14.423% { opacity: 0; }
-    14.4519% { opacity: 1; animation-timing-function: steps(1, end); }
-    30.769%      { opacity: 0; }
+    0%, 6.276% { opacity: 0; }
+    6.2887% { opacity: 1; animation-timing-function: steps(1, end); }
+    13.389%      { opacity: 0; }
     100%       { opacity: 0; }
   }
   .cursor-cmd0 {
     opacity: 0;
-    animation: cursor-cmd0 3.467s linear 0s infinite;
+    animation: cursor-cmd0 7.967s linear 0s infinite;
   }
 
   @keyframes fade-out1 {
     0%    { opacity: 0; }
-    30.769%  { opacity: 0; }
-    42.308%  { opacity: 1; }
+    13.389%  { opacity: 0; }
+    18.410%  { opacity: 1; }
     99.9% { opacity: 1; }
     100%  { opacity: 0; }
   }
   .fade-out1 {
     opacity: 0;
-    animation: fade-out1 3.467s linear 0s infinite;
+    animation: fade-out1 7.967s linear 0s infinite;
+  }
+
+  @keyframes type-cmd2 {
+    0%    { clip-path: inset(0 100% 0 0); }
+    22.176%  { clip-path: inset(0 100% 0 0); animation-timing-function: steps(25, end); }
+    32.636%  { clip-path: inset(0 -20px 0 0); }
+    99.9% { clip-path: inset(0 -20px 0 0); }
+    100%  { clip-path: inset(0 100% 0 0); }
+  }
+  .type-cmd2 {
+    clip-path: inset(0 100% 0 0);
+    animation: type-cmd2 7.967s linear 0s infinite;
+  }
+
+  @keyframes cursor-cmd2 {
+    0%, 22.176% { opacity: 0; }
+    22.1883% { opacity: 1; animation-timing-function: steps(1, end); }
+    32.636%      { opacity: 0; }
+    100%       { opacity: 0; }
+  }
+  .cursor-cmd2 {
+    opacity: 0;
+    animation: cursor-cmd2 7.967s linear 0s infinite;
+  }
+
+  @keyframes fade-out3 {
+    0%    { opacity: 0; }
+    32.636%  { opacity: 0; }
+    37.657%  { opacity: 1; }
+    99.9% { opacity: 1; }
+    100%  { opacity: 0; }
+  }
+  .fade-out3 {
+    opacity: 0;
+    animation: fade-out3 7.967s linear 0s infinite;
+  }
+
+  @keyframes type-cmd4 {
+    0%    { clip-path: inset(0 100% 0 0); }
+    41.423%  { clip-path: inset(0 100% 0 0); animation-timing-function: steps(23, end); }
+    51.046%  { clip-path: inset(0 -20px 0 0); }
+    99.9% { clip-path: inset(0 -20px 0 0); }
+    100%  { clip-path: inset(0 100% 0 0); }
+  }
+  .type-cmd4 {
+    clip-path: inset(0 100% 0 0);
+    animation: type-cmd4 7.967s linear 0s infinite;
+  }
+
+  @keyframes cursor-cmd4 {
+    0%, 41.423% { opacity: 0; }
+    41.4351% { opacity: 1; animation-timing-function: steps(1, end); }
+    51.046%      { opacity: 0; }
+    100%       { opacity: 0; }
+  }
+  .cursor-cmd4 {
+    opacity: 0;
+    animation: cursor-cmd4 7.967s linear 0s infinite;
+  }
+
+  @keyframes fade-out5 {
+    0%    { opacity: 0; }
+    51.046%  { opacity: 0; }
+    56.067%  { opacity: 1; }
+    99.9% { opacity: 1; }
+    100%  { opacity: 0; }
+  }
+  .fade-out5 {
+    opacity: 0;
+    animation: fade-out5 7.967s linear 0s infinite;
+  }
+
+  @keyframes type-cmd6 {
+    0%    { clip-path: inset(0 100% 0 0); }
+    59.833%  { clip-path: inset(0 100% 0 0); animation-timing-function: steps(24, end); }
+    69.874%  { clip-path: inset(0 -20px 0 0); }
+    99.9% { clip-path: inset(0 -20px 0 0); }
+    100%  { clip-path: inset(0 100% 0 0); }
+  }
+  .type-cmd6 {
+    clip-path: inset(0 100% 0 0);
+    animation: type-cmd6 7.967s linear 0s infinite;
+  }
+
+  @keyframes cursor-cmd6 {
+    0%, 59.833% { opacity: 0; }
+    59.8452% { opacity: 1; animation-timing-function: steps(1, end); }
+    69.874%      { opacity: 0; }
+    100%       { opacity: 0; }
+  }
+  .cursor-cmd6 {
+    opacity: 0;
+    animation: cursor-cmd6 7.967s linear 0s infinite;
+  }
+
+  @keyframes fade-out7 {
+    0%    { opacity: 0; }
+    69.874%  { opacity: 0; }
+    74.895%  { opacity: 1; }
+    99.9% { opacity: 1; }
+    100%  { opacity: 0; }
+  }
+  .fade-out7 {
+    opacity: 0;
+    animation: fade-out7 7.967s linear 0s infinite;
   }
 
   </style>
   <!-- Window frame -->
-  <rect x="0" y="0" width="700" height="672"
+  <rect x="0" y="0" width="800" height="1244"
         rx="8" ry="8" fill="#282a36" />
     <!-- Title bar -->
-    <rect x="0" y="0" width="700" height="38"
+    <rect x="0" y="0" width="800" height="38"
           rx="8" ry="8" fill="#44475a" />
-    <rect x="0" y="30" width="700" height="8"
+    <rect x="0" y="30" width="800" height="8"
           fill="#44475a" />
     <circle cx="16" cy="19" r="6" fill="#ff5f57" />
     <circle cx="36" cy="19" r="6" fill="#febc2e" />
     <circle cx="56" cy="19" r="6" fill="#28c840" />
-    <text x="350" y="24" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="13" fill="#f8f8f2" opacity="0.7" text-anchor="middle" dominant-baseline="middle">python-doctor</text>
+    <text x="400" y="24" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="13" fill="#f8f8f2" opacity="0.7" text-anchor="middle" dominant-baseline="middle">Python Doctor — One command. One score.</text>
   <!-- Terminal body -->
   <clipPath id="body-clip">
-    <rect x="0" y="38" width="700" height="634" />
+    <rect x="0" y="38" width="800" height="1206" />
   </clipPath>
   <g clip-path="url(#body-clip)">
     <text x="20" y="80" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" xml:space="preserve" class="type-cmd0"><tspan fill="#50fa7b">$ </tspan><tspan fill="#f8f8f2">python-doctor .</tspan></text>
@@ -69,20 +174,46 @@
     <text x="20" y="278" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🧹 Lint (16/20)</text>
     <text x="20" y="300" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ✗ F841: unused variable &#x27;x&#x27; (api/views.py:45)</text>
     <text x="20" y="322" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ✗ F401: unused import &#x27;os&#x27; (utils/helpers.py:1)</text>
-    <text x="20" y="344" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
-    <text x="20" y="366" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🔄 Complexity (15/15) ✓</text>
-    <text x="20" y="388" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ✓ All clear.</text>
-    <text x="20" y="410" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
-    <text x="20" y="432" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🧘 Zen (12/15)</text>
-    <text x="20" y="454" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ⚠ deep-nesting: 6 levels deep (core/engine.py:88)</text>
-    <text x="20" y="476" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
-    <text x="20" y="498" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🏗 Structure (8/10)</text>
-    <text x="20" y="520" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ⚠ low-test-ratio: test:source ratio is 0.3</text>
-    <text x="20" y="542" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
-    <text x="20" y="564" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">⚡ Exceptions (10/10) ✓</text>
-    <text x="20" y="586" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ✓ All clear.</text>
-    <text x="20" y="608" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
-    <text x="20" y="630" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🔗 Imports (5/5) ✓</text>
-    <text x="20" y="652" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ✓ All clear.</text>
+    <text x="20" y="344" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ⚠ W291: trailing whitespace (models/user.py:12)</text>
+    <text x="20" y="366" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
+    <text x="20" y="388" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🔄 Complexity (15/15) ✓</text>
+    <text x="20" y="410" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ✓ All clear.</text>
+    <text x="20" y="432" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
+    <text x="20" y="454" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🧘 Zen (12/15)</text>
+    <text x="20" y="476" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ⚠ deep-nesting: 6 levels deep (core/engine.py:88)</text>
+    <text x="20" y="498" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ⚠ long-function: 92 lines (core/engine.py:45)</text>
+    <text x="20" y="520" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
+    <text x="20" y="542" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🏗 Structure (8/10)</text>
+    <text x="20" y="564" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ⚠ low-test-ratio: test:source ratio is 0.3 (&lt; 0.5)</text>
+    <text x="20" y="586" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
+    <text x="20" y="608" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">⚡ Exceptions (10/10) ✓</text>
+    <text x="20" y="630" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ✓ All clear.</text>
+    <text x="20" y="652" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1"></text>
+    <text x="20" y="674" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">🔗 Imports (5/5) ✓</text>
+    <text x="20" y="696" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out1">  ✓ All clear.</text>
+    <text x="20" y="740" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" xml:space="preserve" class="type-cmd2"><tspan fill="#50fa7b">$ </tspan><tspan fill="#f8f8f2">python-doctor . --score</tspan></text>
+    <rect x="233.5" y="726" width="8.5" height="16" fill="#f8f8f2" opacity="0.7" class="cursor-cmd2" />
+    <text x="20" y="762" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out3">82</text>
+    <text x="20" y="806" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" xml:space="preserve" class="type-cmd4"><tspan fill="#50fa7b">$ </tspan><tspan fill="#f8f8f2">python-doctor . --fix</tspan></text>
+    <rect x="216.4" y="792" width="8.5" height="16" fill="#f8f8f2" opacity="0.7" class="cursor-cmd4" />
+    <text x="20" y="828" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out5">🐍 Python Doctor v2026.03.22</text>
+    <text x="20" y="850" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out5">Fixing: /home/user/myproject</text>
+    <text x="20" y="872" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out5"></text>
+    <text x="20" y="894" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out5">✅ Auto-fixed 3 lint issues via ruff</text>
+    <text x="20" y="916" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out5">ℹ  2 issues require manual review</text>
+    <text x="20" y="938" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out5"></text>
+    <text x="20" y="960" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out5">📊 Score: 89/100 (Good)  ↑ from 82</text>
+    <text x="20" y="1004" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" xml:space="preserve" class="type-cmd6"><tspan fill="#50fa7b">$ </tspan><tspan fill="#f8f8f2">python-doctor . --json</tspan></text>
+    <rect x="225.0" y="990" width="8.5" height="16" fill="#f8f8f2" opacity="0.7" class="cursor-cmd6" />
+    <text x="20" y="1026" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">{</text>
+    <text x="20" y="1048" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">  &quot;version&quot;: &quot;2026.03.22&quot;,</text>
+    <text x="20" y="1070" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">  &quot;score&quot;: 89,</text>
+    <text x="20" y="1092" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">  &quot;label&quot;: &quot;Good&quot;,</text>
+    <text x="20" y="1114" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">  &quot;categories&quot;: {</text>
+    <text x="20" y="1136" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">    &quot;security&quot;: { &quot;score&quot;: 25, &quot;max&quot;: 25 },</text>
+    <text x="20" y="1158" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">    &quot;lint&quot;:     { &quot;score&quot;: 19, &quot;max&quot;: 20 },</text>
+    <text x="20" y="1180" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">    &quot;zen&quot;:      { &quot;score&quot;: 12, &quot;max&quot;: 15 }</text>
+    <text x="20" y="1202" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">  }</text>
+    <text x="20" y="1224" font-family="'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace" font-size="14" fill="#aaaaaa" xml:space="preserve" class="fade-out7">}</text>
   </g>
 </svg>

@@ -1,7 +1,7 @@
-title: "python-doctor"
+title: "Python Doctor — One command. One score."
 theme: dracula
 prompt: "$ "
-width: 700
+width: 800
 
 steps:
   - cmd: "python-doctor ."
@@ -17,18 +17,47 @@ steps:
       🧹 Lint (16/20)
         ✗ F841: unused variable 'x' (api/views.py:45)
         ✗ F401: unused import 'os' (utils/helpers.py:1)
+        ⚠ W291: trailing whitespace (models/user.py:12)
 
       🔄 Complexity (15/15) ✓
         ✓ All clear.
 
       🧘 Zen (12/15)
         ⚠ deep-nesting: 6 levels deep (core/engine.py:88)
+        ⚠ long-function: 92 lines (core/engine.py:45)
 
       🏗 Structure (8/10)
-        ⚠ low-test-ratio: test:source ratio is 0.3
+        ⚠ low-test-ratio: test:source ratio is 0.3 (< 0.5)
 
       ⚡ Exceptions (10/10) ✓
         ✓ All clear.
 
       🔗 Imports (5/5) ✓
         ✓ All clear.
+
+  - cmd: "python-doctor . --score"
+    output: |
+      82
+
+  - cmd: "python-doctor . --fix"
+    output: |
+      🐍 Python Doctor v2026.03.22
+      Fixing: /home/user/myproject
+
+      ✅ Auto-fixed 3 lint issues via ruff
+      ℹ  2 issues require manual review
+
+      📊 Score: 89/100 (Good)  ↑ from 82
+
+  - cmd: "python-doctor . --json"
+    output: |
+      {
+        "version": "2026.03.22",
+        "score": 89,
+        "label": "Good",
+        "categories": {
+          "security": { "score": 25, "max": 25 },
+          "lint":     { "score": 19, "max": 20 },
+          "zen":      { "score": 12, "max": 15 }
+        }
+      }
