@@ -37,12 +37,18 @@ def _parse_pyproject(path: str) -> dict:
         return {}
 
 
+_DEP_SEPARATORS = (">=", "<=", "==", ">", "<", "[", ";")
+
+
 def _read_dependencies(data: dict) -> set[str]:
     """Extract dependency names from parsed pyproject.toml data."""
     deps: set[str] = set()
     for raw in data.get("project", {}).get("dependencies", []):
-        # Extract package name before version specifier
-        name = raw.split(">=")[0].split("<=")[0].split("==")[0].split(">")[0].split("<")[0].split("[")[0].split(";")[0].strip()
+        # Strip version specifier / extras / env markers to get the bare name.
+        name = raw
+        for sep in _DEP_SEPARATORS:
+            name = name.split(sep)[0]
+        name = name.strip()
         if name:
             deps.add(name.lower())
     return deps

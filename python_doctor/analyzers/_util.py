@@ -3,7 +3,10 @@
 import os
 
 # Directories to skip during analysis
-SKIP_DIRS = frozenset({".venv", "venv", "node_modules", "__pycache__", ".git", ".tox", ".mypy_cache", ".ruff_cache", "docs"})
+SKIP_DIRS = frozenset({
+    ".venv", "venv", "node_modules", "__pycache__",
+    ".git", ".tox", ".mypy_cache", ".ruff_cache", "docs",
+})
 
 
 _TEST_DIRS = frozenset({"tests", "test", "testing"})

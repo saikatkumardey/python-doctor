@@ -286,7 +286,7 @@ echo "python-doctor: $score/100 — OK"
             # Update existing hook
             with open(hook_path, "w") as f:
                 f.write(hook_script)
-            os.chmod(hook_path, 0o755)
+            os.chmod(hook_path, 0o755)  # noqa: S103 - git hooks must be executable
             print(f"Updated pre-commit hook (min score: {threshold}).")
             return
         # Append to existing hook
@@ -296,7 +296,7 @@ echo "python-doctor: $score/100 — OK"
     else:
         with open(hook_path, "w") as f:
             f.write(hook_script)
-        os.chmod(hook_path, 0o755)
+        os.chmod(hook_path, 0o755)  # noqa: S103 - git hooks must be executable
         print(f"Installed pre-commit hook (min score: {threshold}).")
 
     print(f"  Hook: {hook_path}")
@@ -316,8 +316,8 @@ def _find_git_dir() -> str | None:
         path = parent
 
 
-def main():
-    """CLI entry point for python-doctor."""
+def _build_parser() -> argparse.ArgumentParser:
+    """Construct the argparse parser. Split out of main() to keep it small."""
     parser = argparse.ArgumentParser(
         prog="python-doctor",
         description="Scan Python codebases and get a 0-100 health score.",
@@ -333,9 +333,9 @@ def main():
         default=None,
         help="Override auto-detected project profile",
     )
-    parser.add_argument("--badge", action="store_true", help="Output a shields.io badge markdown for your README")
-    parser.add_argument("--ci", action="store_true", help="Output a GitHub Actions workflow for auto-updating the badge")
-    parser.add_argument("--pre-commit", action="store_true", help="Install python-doctor as a pre-commit hook")
+    parser.add_argument("--badge", action="store_true", help="Output a shields.io badge for your README")
+    parser.add_argument("--ci", action="store_true", help="Output a GitHub Actions workflow for the badge")
+    parser.add_argument("--pre-commit", action="store_true", help="Install as a git pre-commit hook")
     parser.add_argument(
         "--min-score",
         type=int,
@@ -353,8 +353,69 @@ def main():
         help="Skip reading/writing the .python-doctor/state.json cache.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    return parser
 
-    args = parser.parse_args()
+
+def _build_json_output(results, path: str, score: int, delta: dict) -> dict:
+    """Build the JSON output payload. Returns a dict ready for json.dumps."""
+    output = {
+        "version": __version__,
+        "path": path,
+        "score": score,
+        "label": score_label(score),
+        "categories": {},
+        "delta": {
+            "total": delta["total_delta"],
+            "categories": delta["category_deltas"],
+            "has_previous": delta["has_previous"],
+        },
+    }
+    for r in results:
+        cat = CATEGORIES[r.category]
+        output["categories"][r.category] = {
+            "score": category_score(r),
+            "max": cat["max_deduction"],
+            "deduction": r.deduction,
+            "error": r.error,
+            "findings": [
+                {"rule": f.rule, "message": f.message, "file": f.file, "line": f.line, "severity": f.severity}
+                for f in r.findings
+            ],
+        }
+    return output
+
+
+def _emit_output(args, results, path: str, score: int, delta: dict) -> None:
+    """Dispatch on output mode: --score / --json / default report."""
+    if args.score:
+        print(score)
+    elif args.json_out:
+        print(json.dumps(_build_json_output(results, path, score, delta), indent=2))
+    else:
+        print_report(results, path, verbose=args.verbose, delta=delta)
+
+
+def _save_state_safely(path: str, results, score: int) -> None:
+    """Save state cache, swallowing OS errors (state is best-effort)."""
+    try:
+        save_state(path, results, score)
+    except OSError:
+        pass
+
+
+def _compute_exit_code(score: int, args, delta: dict) -> int:
+    """Compute exit code based on score threshold and --strict regression check."""
+    threshold = args.min_score if args.min_score is not None else 50
+    if score < threshold:
+        return 1
+    if args.strict and delta["has_previous"] and delta["total_delta"] < 0:
+        return 2
+    return 0
+
+
+def main():
+    """CLI entry point for python-doctor."""
+    args = _build_parser().parse_args()
 
     if args.ci:
         print(BADGE_CI_WORKFLOW)
@@ -365,7 +426,6 @@ def main():
         return
 
     path = os.path.abspath(args.path)
-
     if not os.path.isdir(path):
         print(f"Error: '{path}' is not a directory.", file=sys.stderr)
         sys.exit(1)
@@ -377,55 +437,15 @@ def main():
         _print_badge(score)
         return
 
-    # Score delta + state cache (skipped under --no-cache).
     prev_state = None if args.no_cache else load_state(path)
     delta = compute_delta(prev_state, results, score)
 
-    if args.score:
-        print(score)
-    elif args.json_out:
-        output = {
-            "version": __version__,
-            "path": path,
-            "score": score,
-            "label": score_label(score),
-            "categories": {},
-            "delta": {
-                "total": delta["total_delta"],
-                "categories": delta["category_deltas"],
-                "has_previous": delta["has_previous"],
-            },
-        }
-        for r in results:
-            cat = CATEGORIES[r.category]
-            output["categories"][r.category] = {
-                "score": category_score(r),
-                "max": cat["max_deduction"],
-                "deduction": r.deduction,
-                "error": r.error,
-                "findings": [
-                    {"rule": f.rule, "message": f.message, "file": f.file, "line": f.line, "severity": f.severity}
-                    for f in r.findings
-                ],
-            }
-        print(json.dumps(output, indent=2))
-    else:
-        print_report(results, path, verbose=args.verbose, delta=delta)
+    _emit_output(args, results, path, score, delta)
 
-    # Always save state (even for --score / --json), unless --no-cache.
     if not args.no_cache:
-        try:
-            save_state(path, results, score)
-        except OSError:
-            # State save is best-effort; don't fail the run if it can't write.
-            pass
+        _save_state_safely(path, results, score)
 
-    threshold = args.min_score if args.min_score is not None else 50
-    if score < threshold:
-        sys.exit(1)
-    if args.strict and delta["has_previous"] and delta["total_delta"] < 0:
-        sys.exit(2)
-    sys.exit(0)
+    sys.exit(_compute_exit_code(score, args, delta))
 
 
 if __name__ == "__main__":

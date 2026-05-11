@@ -5,6 +5,8 @@
 - Score delta cache: every run shows score change from last run, with top regression callout.
 - New --strict flag: exit 2 on any regression vs cached state (for CI).
 - New --no-cache flag: skip state caching when desired.
+- Refactor: split cli.main() into _build_parser/_emit_output/_build_json_output/_save_state_safely/_compute_exit_code helpers. Self-score 89 -> 94.
+- Cleanup: fixed E501 line-length violations in _util.py, profile.py, cli.py.
 
 ## 2026.2.22 (2026-02-22)
 
