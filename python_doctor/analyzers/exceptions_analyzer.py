@@ -36,6 +36,34 @@ def _is_pass_or_continue(handler: ast.ExceptHandler) -> bool:
     )
 
 
+def _is_fallback_try(stmt: ast.stmt) -> bool:
+    """Return True if *stmt* is a Try whose handlers are all pass/continue."""
+    if not isinstance(stmt, ast.Try):
+        return False
+    return all(_is_pass_or_continue(h) for h in stmt.handlers)
+
+
+def _flush_run(run: list[ast.Try], suppressed: set[int]) -> None:
+    """Add handler line numbers from a confirmed fallback run to *suppressed*."""
+    if len(run) < 2:
+        return
+    for try_node in run:
+        for handler in try_node.handlers:
+            suppressed.add(handler.lineno)
+
+
+def _scan_body(body: list[ast.stmt], suppressed: set[int]) -> None:
+    """Scan a single body for runs of consecutive fallback Try nodes."""
+    run: list[ast.Try] = []
+    for stmt in body:
+        if _is_fallback_try(stmt):
+            run.append(stmt)
+            continue
+        _flush_run(run, suppressed)
+        run = []
+    _flush_run(run, suppressed)
+
+
 def _find_fallback_chains(tree: ast.Module) -> set[int]:
     """Return handler line numbers that belong to fallback chains.
 
@@ -45,31 +73,10 @@ def _find_fallback_chains(tree: ast.Module) -> set[int]:
     not be flagged.
     """
     suppressed: set[int] = set()
-
     for node in ast.walk(tree):
         body = getattr(node, "body", None)
-        if not isinstance(body, list):
-            continue
-
-        # Scan for runs of consecutive Try nodes whose handlers are all
-        # pass/continue.
-        run: list[ast.Try] = []
-        for stmt in body:
-            is_try = isinstance(stmt, ast.Try)
-            if is_try and all(_is_pass_or_continue(h) for h in stmt.handlers):
-                run.append(stmt)
-            else:
-                if len(run) >= 2:
-                    for try_node in run:
-                        for handler in try_node.handlers:
-                            suppressed.add(handler.lineno)
-                run = []
-        # Flush any remaining run at the end of the body.
-        if len(run) >= 2:
-            for try_node in run:
-                for handler in try_node.handlers:
-                    suppressed.add(handler.lineno)
-
+        if isinstance(body, list):
+            _scan_body(body, suppressed)
     return suppressed
 
 

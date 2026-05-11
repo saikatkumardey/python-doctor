@@ -286,7 +286,7 @@ echo "python-doctor: $score/100 — OK"
             # Update existing hook
             with open(hook_path, "w") as f:
                 f.write(hook_script)
-            os.chmod(hook_path, 0o755)  # noqa: S103 - git hooks must be executable
+            os.chmod(hook_path, 0o755)  # nosec B103 - git hooks must be executable
             print(f"Updated pre-commit hook (min score: {threshold}).")
             return
         # Append to existing hook
@@ -296,7 +296,7 @@ echo "python-doctor: $score/100 — OK"
     else:
         with open(hook_path, "w") as f:
             f.write(hook_script)
-        os.chmod(hook_path, 0o755)  # noqa: S103 - git hooks must be executable
+        os.chmod(hook_path, 0o755)  # nosec B103 - git hooks must be executable
         print(f"Installed pre-commit hook (min score: {threshold}).")
 
     print(f"  Hook: {hook_path}")

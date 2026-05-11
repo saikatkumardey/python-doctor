@@ -37,6 +37,87 @@ def _is_literal_subprocess(finding: dict) -> bool:
     return False
 
 
+def _build_bandit_cmd(abs_path: str, excludes: str) -> list[str]:
+    """Build the bandit command, preferring the standalone binary."""
+    if shutil.which("bandit"):
+        return ["bandit", "-r", "-f", "json", "-q", "--exclude", excludes, abs_path]
+    return [sys.executable, "-m", "bandit", "-r", "-f", "json", "-q", "--exclude", excludes, abs_path]
+
+
+def _run_bandit(cmd: list[str], result: AnalyzerResult) -> list[dict] | None:
+    """Run bandit and return its result list, or None if it failed."""
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)  # nosec B603
+        data = json.loads(proc.stdout) if proc.stdout.strip() else {}
+        return data.get("results", [])
+    except FileNotFoundError:
+        result.error = "bandit not found (skipped)"
+        return None
+    except Exception as e:
+        result.error = str(e)
+        return None
+
+
+# Test IDs that are noise in test files (test code legitimately uses them).
+_TEST_NOISE_IDS = frozenset({
+    "B108", "B110", "B201", "B301", "B403", "B404", "B603", "B607", "B704",
+})
+# Test IDs for subprocess use that are fine in example/script directories.
+_EXAMPLE_SUBPROCESS_IDS = frozenset({"B603", "B607", "B404"})
+
+
+def _should_skip(item: dict, in_test: bool, in_example: bool) -> bool:
+    """Return True when a bandit finding should be filtered out by context."""
+    test_id = item.get("test_id", "?")
+
+    # B101 (assert) is a standard Python pattern for internal invariants.
+    if test_id == "B101":
+        return True
+    # Hardcoded passwords in test/example files are fake credentials.
+    if test_id in ("B105", "B106", "B107") and (in_test or in_example):
+        return True
+    # No-timeout requests in test files are test code.
+    if test_id == "B113" and in_test:
+        return True
+    # General test-file noise.
+    if test_id in _TEST_NOISE_IDS and in_test:
+        return True
+    # Subprocess use in example/script dirs.
+    if test_id in _EXAMPLE_SUBPROCESS_IDS and in_example:
+        return True
+    # Subprocess calls with only string literal args are safe.
+    if test_id in ("B603", "B607") and _is_literal_subprocess(item):
+        return True
+    return False
+
+
+def _finding_from_item(item: dict) -> Finding:
+    """Build a Finding from a raw bandit result item."""
+    sev = item.get("issue_severity", "LOW").upper()
+    cost = BANDIT_SEVERITY_COST.get(sev, 1)
+    test_id = item.get("test_id", "?")
+    return Finding(
+        category="security",
+        rule=f"bandit/{test_id}",
+        message=item.get("issue_text", ""),
+        file=item.get("filename", ""),
+        line=item.get("line_number", 0),
+        severity=sev.lower(),
+        cost=cost,
+    )
+
+
+def _items_to_findings(items: list[dict]) -> list[Finding]:
+    """Convert raw bandit items into Findings, applying context filters."""
+    findings: list[Finding] = []
+    for item in items:
+        filename = item.get("filename", "")
+        if _should_skip(item, is_test_file(filename), is_example_file(filename)):
+            continue
+        findings.append(_finding_from_item(item))
+    return findings
+
+
 def analyze(path: str, **_kw) -> AnalyzerResult:
     """Run bandit security analysis on the project."""
     result = AnalyzerResult(category="security")
@@ -44,62 +125,12 @@ def analyze(path: str, **_kw) -> AnalyzerResult:
     abs_path = os.path.abspath(path)
     excludes = ",".join(os.path.join(abs_path, d) for d in SKIP_DIRS)
 
-    if shutil.which("bandit"):
-        cmd = ["bandit", "-r", "-f", "json", "-q", "--exclude", excludes, abs_path]
-    else:
-        cmd = [sys.executable, "-m", "bandit", "-r", "-f", "json", "-q", "--exclude", excludes, abs_path]
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)  # nosec B603
-        data = json.loads(proc.stdout) if proc.stdout.strip() else {}
-        items = data.get("results", [])
-    except FileNotFoundError:
-        result.error = "bandit not found (skipped)"
-        return result
-    except Exception as e:
-        result.error = str(e)
+    cmd = _build_bandit_cmd(abs_path, excludes)
+    items = _run_bandit(cmd, result)
+    if items is None:
         return result
 
-    for item in items:
-        sev = item.get("issue_severity", "LOW").upper()
-        cost = BANDIT_SEVERITY_COST.get(sev, 1)
-        test_id = item.get("test_id", "?")
-        msg = item.get("issue_text", "")
-        filename = item.get("filename", "")
-        line = item.get("line_number", 0)
-
-        in_test = is_test_file(filename)
-        in_example = is_example_file(filename)
-
-        # Skip B101 (assert) everywhere — asserts are a standard Python pattern
-        # for internal invariants, not a security issue
-        if test_id == "B101":
-            continue
-
-        # Skip B105/B106/B107 (hardcoded passwords) in test/example files — fake credentials
-        if test_id in ("B105", "B106", "B107") and (in_test or in_example):
-            continue
-
-        # Skip B113 (no timeout on requests) in test files — test code
-        if test_id == "B113" and in_test:
-            continue
-
-        # Skip noise rules in test files — test code legitimately uses these patterns
-        if test_id in ("B110", "B201", "B301", "B403", "B404", "B603", "B607", "B704") and in_test:
-            continue
-
-        # Skip B603/B607/B404 (subprocess) in scripts/example dirs — build/CI scripts
-        if test_id in ("B603", "B607", "B404") and in_example:
-            continue
-
-        # Skip B603/B607 when subprocess uses only string literal arguments
-        if test_id in ("B603", "B607") and _is_literal_subprocess(item):
-            continue
-
-        result.findings.append(Finding(
-            category="security", rule=f"bandit/{test_id}", message=msg,
-            file=filename, line=line, severity=sev.lower(), cost=cost,
-        ))
-
+    result.findings = _items_to_findings(items)
     result.deduction = diminishing_deduction(
         [f.cost for f in result.findings], top_n=5, tail_rate=0.1, cap=max_ded
     )
