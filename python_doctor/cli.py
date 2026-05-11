@@ -1,6 +1,7 @@
 """Main CLI entry point for Python Doctor."""
 
 import argparse
+import concurrent.futures
 import fnmatch
 import json
 import os
@@ -20,6 +21,7 @@ from .config import load_config
 from .profile import detect_profile, profile_for_kind
 from .rules import CATEGORIES
 from .scorer import category_score, compute_score, score_label
+from .state import compute_delta, load_state, save_state
 
 ANALYZERS = [
     ("security", bandit_analyzer),
@@ -92,7 +94,12 @@ jobs:
 
 
 def run_analyzers(path: str, fix: bool = False, profile_name: str | None = None):
-    """Run all analyzers on the given path and return results."""
+    """Run all analyzers on the given path and return results.
+
+    Analyzers run in parallel via a ThreadPoolExecutor (each one is I/O bound:
+    bandit/ruff/radon shell out, others walk AST/filesystem). Results are
+    returned in the same order as ``ANALYZERS`` so output stays deterministic.
+    """
     config = load_config(path)
 
     # Determine profile: CLI flag > config file > auto-detect
@@ -107,8 +114,7 @@ def run_analyzers(path: str, fix: bool = False, profile_name: str | None = None)
     merged_max_deduction = {**profile.max_deduction_overrides, **config.max_deduction_overrides}
     merged_suppressed = profile.suppressed_rules | config.suppress_rules
 
-    results = []
-    for cat_name, mod in ANALYZERS:
+    def _run_one(cat_name, mod):
         kwargs = {"path": path}
         if cat_name == "lint":
             kwargs["fix"] = fix
@@ -138,7 +144,12 @@ def run_analyzers(path: str, fix: bool = False, profile_name: str | None = None)
                 max_ded = kwargs.get("max_deduction", CATEGORIES[cat_name]["max_deduction"])
                 result.deduction = min(sum(f.cost for f in result.findings), max_ded)
 
-        results.append(result)
+        return result
+
+    max_workers = min(len(ANALYZERS), os.cpu_count() or 4)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # executor.map preserves input ordering, so results match ANALYZERS order.
+        results = list(executor.map(lambda pair: _run_one(*pair), ANALYZERS))
     return results
 
 
@@ -150,14 +161,29 @@ def format_finding(f, path: str) -> str:
     return f"  {icon} {f.rule}: {f.message}" + (f" ({loc})" if loc else "")
 
 
-def print_report(results, path: str, verbose: bool = False):
+def _format_delta_suffix(delta: dict | None) -> str:
+    """Return ASCII suffix for the score header, e.g. '  [+3 from last run]'."""
+    if not delta or not delta.get("has_previous"):
+        return ""
+    total = delta["total_delta"]
+    if total > 0:
+        body = f"+{total} from last run"
+    elif total < 0:
+        body = f"{total} from last run"
+    else:
+        body = "no change"
+    return f"  [{body}]"
+
+
+def print_report(results, path: str, verbose: bool = False, delta: dict | None = None):
     """Print the full health report to stdout."""
     print(f"\n🐍 Python Doctor v{__version__}")
     print(f"Scanning: {path}\n")
 
     score = compute_score(results)
     label = score_label(score)
-    print(f"📊 Score: {score}/100 ({label})\n")
+    suffix = _format_delta_suffix(delta)
+    print(f"📊 Score: {score}/100 ({label}){suffix}\n")
 
     for result in results:
         cat = CATEGORIES[result.category]
@@ -184,6 +210,16 @@ def print_report(results, path: str, verbose: bool = False):
             if remaining > 0:
                 print(f"  ... and {remaining} more")
         print()
+
+    if delta and delta.get("has_previous") and delta.get("total_delta", 0) < 0:
+        top = delta.get("top_regression")
+        if top:
+            cat_name, drop = top
+            label = CATEGORIES.get(cat_name, {}).get("label", cat_name)
+            points = abs(drop)
+            word = "point" if points == 1 else "points"
+            print(f"Regression: {label} dropped {points} {word}.")
+            print()
 
 
 def _badge_color(score: int) -> str:
@@ -306,6 +342,16 @@ def main():
         default=None,
         help="Minimum score threshold (exit 1 if below). Default: 50",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit 2 if score regressed vs cached state (for CI).",
+    )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Skip reading/writing the .python-doctor/state.json cache.",
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     args = parser.parse_args()
@@ -331,17 +377,24 @@ def main():
         _print_badge(score)
         return
 
+    # Score delta + state cache (skipped under --no-cache).
+    prev_state = None if args.no_cache else load_state(path)
+    delta = compute_delta(prev_state, results, score)
+
     if args.score:
         print(score)
-        return
-
-    if args.json_out:
+    elif args.json_out:
         output = {
             "version": __version__,
             "path": path,
             "score": score,
             "label": score_label(score),
             "categories": {},
+            "delta": {
+                "total": delta["total_delta"],
+                "categories": delta["category_deltas"],
+                "has_previous": delta["has_previous"],
+            },
         }
         for r in results:
             cat = CATEGORIES[r.category]
@@ -356,11 +409,23 @@ def main():
                 ],
             }
         print(json.dumps(output, indent=2))
-        return
+    else:
+        print_report(results, path, verbose=args.verbose, delta=delta)
 
-    print_report(results, path, verbose=args.verbose)
+    # Always save state (even for --score / --json), unless --no-cache.
+    if not args.no_cache:
+        try:
+            save_state(path, results, score)
+        except OSError:
+            # State save is best-effort; don't fail the run if it can't write.
+            pass
+
     threshold = args.min_score if args.min_score is not None else 50
-    sys.exit(0 if score >= threshold else 1)
+    if score < threshold:
+        sys.exit(1)
+    if args.strict and delta["has_previous"] and delta["total_delta"] < 0:
+        sys.exit(2)
+    sys.exit(0)
 
 
 if __name__ == "__main__":

@@ -116,6 +116,17 @@ python-doctor . --score
 python-doctor . --json
 ```
 
+### Tracking Progress
+
+Every run writes `.python-doctor/state.json` with per-category scores. The next run reads it and shows the delta in the header:
+
+```
+$ python-doctor .
+📊 Score: 85/100 (Good)  [+3 from last run]
+```
+
+If the total score regressed, the report also calls out the worst-dropping category at the bottom. Pass `--strict` in CI to exit `2` on any regression, or `--no-cache` to skip the cache entirely.
+
 ### JSON Output
 
 The `--json` flag returns machine-readable output that agents can parse directly:
@@ -248,6 +259,8 @@ Options:
   --ci                   Output a GitHub Actions workflow for badge auto-update
   --pre-commit           Install as a git pre-commit hook
   --min-score N          Minimum score threshold (exit 1 if below). Default: 50
+  --strict               Exit 2 if the score regressed vs the cached state (CI guard)
+  --no-cache             Skip reading/writing the .python-doctor/state.json cache
   --profile TYPE         Override auto-detected profile (cli|web|library|script)
   --version              Show version and exit
   -h, --help             Show help and exit
@@ -257,8 +270,9 @@ Options:
 
 | Code | Meaning |
 |------|---------|
-| `0`  | Score >= 50 |
+| `0`  | Score >= 50 (and, with `--strict`, no regression vs cached state) |
 | `1`  | Score < 50 (critical health) |
+| `2`  | `--strict` only: score regressed vs the cached state |
 
 ## What It Checks
 

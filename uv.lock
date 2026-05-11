@@ -234,7 +234,7 @@ wheels = [
 
 [[package]]
 name = "python-doctor"
-version = "2026.3.22"
+version = "2026.5.11"
 source = { editable = "." }
 dependencies = [
     { name = "bandit" },
